@@ -11,16 +11,16 @@ dropdb:
 	docker exec -it bilitioo-db dropdb bilitioo
 
 migrateup:
-	migrate -path db/migration/ -database  "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
+	migrate -path migrate -database  "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose up
 
 migrateup1:
-	migrate -path db/migration/ -database  "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up 1
+	migrate -path migrate -database  "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose up 1
 
 migratedown:
-	migrate -path db/migration/ -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down
+	migrate -path migrate -database "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose down
 
 migratedown1:
-	migrate -path db/migration/ -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose down 1
+	migrate -path migrate -database "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose down 1
 
 new_migrate:
 	migrate create -ext sql -dir migrate -seq $(name)
