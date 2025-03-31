@@ -69,6 +69,4 @@ ALTER TABLE "admin_change_reservation" ADD FOREIGN KEY ("user_id") REFERENCES "u
 
 ALTER TABLE "payment" ADD CONSTRAINT amount_payment_validation CHECK (amount > 0);
 
-ALTER TABLE "reservation" ADD CONSTRAINT duration_time_reservation_validation CHECK (departure_time > 0);
-
 

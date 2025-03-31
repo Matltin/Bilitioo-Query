@@ -2,7 +2,7 @@ CREATE TABLE "seat" (
   "id" bigserial PRIMARY KEY,
   "vehicle_id" bigint NOT NULL,
   "vehicle_type" vehicle_type NOT NULL,
-  "seat_number" varchar NOT NULL,
+  "seat_number" int NOT NULL,
   "is_available" boolean NOT NULL DEFAULT true
 );
 

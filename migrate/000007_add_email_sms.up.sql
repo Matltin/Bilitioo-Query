@@ -73,8 +73,8 @@ REFERENCES "send_email_sms" ("id");
 
 ALTER TABLE "user_activity"
 ADD CONSTRAINT duration_time_user_activity_validation
-CHECK (departure_time > 0);
+CHECK (duration_time > interval '0 seconds');
 
 ALTER TABLE "send_verification_code"
 ADD CONSTRAINT duration_time_send_verification_code_validation
-CHECK (departure_time > 0);
+CHECK (duration_time > interval '0 seconds');
