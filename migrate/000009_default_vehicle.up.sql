@@ -107,3 +107,21 @@ VALUES
 (24, 'PREMIUM-ECONOMY', 'Boeing 737'),
 (25, 'ECONOMY', 'MD-80'),
 (26, 'PREMIUM-ECONOMY', 'Boeing 737');
+
+DO $$
+DECLARE
+  rec RECORD;
+  i INT;
+BEGIN
+  FOR rec IN (
+    SELECT v.id, v.capacity, c.type AS vehicle_type
+    FROM vehicle v
+    JOIN company c ON c.id = v.company_id
+  ) LOOP
+    FOR i IN 1..rec.capacity LOOP
+      INSERT INTO seat (vehicle_id, vehicle_type, seat_number)
+      VALUES (rec.id, rec.vehicle_type, i);
+    END LOOP;
+  END LOOP;
+END;
+$$;
