@@ -24,3 +24,19 @@ migratedown1:
 
 new_migrate:
 	migrate create -ext sql -dir migrate -seq $(name)
+
+dockerup:
+	docker-compose up -d
+
+dockerstop:
+	docker-compose down
+
+dockerlogs:
+	docker-compose logs -f
+
+dockerstart:
+	docker-compose start
+
+dockerstop:
+	docker-compose stop
+	
