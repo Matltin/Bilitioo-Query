@@ -28,7 +28,7 @@ new_migrate:
 dockerup:
 	docker-compose up -d
 
-dockerstop:
+dockerdown:
 	docker-compose down
 
 dockerlogs:
