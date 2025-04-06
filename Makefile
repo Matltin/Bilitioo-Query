@@ -26,17 +26,17 @@ new_migrate:
 	migrate create -ext sql -dir migrate -seq $(name)
 
 dockerup:
-	docker-compose up -d
+	docker compose up -d
 
 dockerdown:
-	docker-compose down
+	docker compose down
 
 dockerlogs:
-	docker-compose logs -f
+	docker compose logs -f
 
 dockerstart:
-	docker-compose start
+	docker compose start
 
 dockerstop:
-	docker-compose stop
+	docker compose stop
 	
