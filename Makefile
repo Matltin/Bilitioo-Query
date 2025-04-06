@@ -1,14 +1,14 @@
 postgres:
-	docker run --name bilitioo-db -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
+	docker run --name test_for_bilitioo_db -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
 
 psql:
-	docker exec -it bilitioo-db psql -U root -d bilitioo
+	docker exec -it test_for_bilitioo_db psql -U root -d bilitioo
 
 createdb:
-	docker exec -it bilitioo-db createdb --username=root --owner=root bilitioo
+	docker exec -it test_for_bilitioo_db createdb --username=root --owner=root bilitioo
 
 dropdb:
-	docker exec -it bilitioo-db dropdb bilitioo
+	docker exec -it test_for_bilitioo_db dropdb bilitioo
 
 migrateup:
 	migrate -path migrate -database  "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose up
