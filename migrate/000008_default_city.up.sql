@@ -38,7 +38,6 @@ INSERT INTO "city" ("province", "county") VALUES
   ('Bushehr', 'Bushehr'),
   
   -- Region 7: Southeastern provinces
-  ('Kerman', 'Kerman'),
   ('Hormozgan', 'Bandar Abbas'),
   ('Sistan and Baluchestan', 'Zahedan'),
   
@@ -196,3 +195,207 @@ INSERT INTO "terminal" ("name", "address") VALUES
   
   -- Jiroft terminals
   ('Jiroft Bus Terminal', 'Terminal St., Jiroft');
+
+-- Insert routes between major cities using subqueries
+INSERT INTO "route" ("origin_city_id", "destination_city_id", "origin_terminal_id", "destination_terminal_id", "distance") VALUES
+  -- 1. Tehran to Mashhad (most frequent route)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Mashhad'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Mashhad Central Bus Terminal'), 925),
+   
+  -- 2. Tehran to Mashhad (air)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Mashhad'), 
+   (SELECT id FROM terminal WHERE name = 'Mehrabad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Mashhad International Airport'), 900),
+   
+  -- 3. Tehran to Mashhad (train)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Mashhad'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran Railway Station'), 
+   (SELECT id FROM terminal WHERE name = 'Mashhad Railway Station'), 850),
+   
+  -- 4. Tehran to Isfahan
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Isfahan'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Isfahan Kaveh Bus Terminal'), 450),
+   
+  -- 5. Tehran to Isfahan (air)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Isfahan'), 
+   (SELECT id FROM terminal WHERE name = 'Mehrabad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Isfahan International Airport'), 415),
+   
+  -- 6. Tehran to Isfahan (train)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Isfahan'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran Railway Station'), 
+   (SELECT id FROM terminal WHERE name = 'Isfahan Railway Station'), 435),
+   
+  -- 7. Tehran to Shiraz
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Shiraz'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Shiraz Karandish Bus Terminal'), 750),
+   
+  -- 8. Tehran to Shiraz (air)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Shiraz'), 
+   (SELECT id FROM terminal WHERE name = 'Mehrabad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Shiraz International Airport'), 685),
+   
+  -- 9. Tehran to Shiraz (train)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Shiraz'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran Railway Station'), 
+   (SELECT id FROM terminal WHERE name = 'Shiraz Railway Station'), 720),
+   
+  -- 10. Tehran to Tabriz
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Tabriz'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran West Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tabriz Central Bus Terminal'), 675),
+   
+  -- 11. Tehran to Tabriz (air)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Tabriz'), 
+   (SELECT id FROM terminal WHERE name = 'Mehrabad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Tabriz International Airport'), 630),
+   
+  -- 12. Tehran to Tabriz (train)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Tabriz'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran Railway Station'), 
+   (SELECT id FROM terminal WHERE name = 'Tabriz Railway Station'), 650),
+   
+  -- 13. Tehran to Ahvaz
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Ahvaz'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Ahvaz Bus Terminal'), 750),
+   
+  -- 14. Tehran to Ahvaz (air)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Ahvaz'), 
+   (SELECT id FROM terminal WHERE name = 'Mehrabad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Ahvaz International Airport'), 680),
+   
+  -- 15. Tehran to Ahvaz (train)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Ahvaz'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran Railway Station'), 
+   (SELECT id FROM terminal WHERE name = 'Ahvaz Railway Station'), 710),
+   
+  -- 16. Tehran to Karaj
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Karaj'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran East Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Karaj Central Bus Terminal'), 150),
+   
+  -- 17. Tehran to Rasht
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Rasht'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran West Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Rasht Bus Terminal'), 355),
+   
+  -- 18. Tehran to Rasht (air)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Rasht'), 
+   (SELECT id FROM terminal WHERE name = 'Mehrabad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Sardar Jangal Airport'), 320),
+   
+  -- 19. Tehran to Yazd
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Yazd'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Yazd Bus Terminal'), 700),
+   
+  -- 20. Tehran to Yazd (air)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Yazd'), 
+   (SELECT id FROM terminal WHERE name = 'Mehrabad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Yazd Shahid Sadooghi Airport'), 590),
+   
+  -- 21. Tehran to Yazd (train)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Yazd'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran Railway Station'), 
+   (SELECT id FROM terminal WHERE name = 'Yazd Railway Station'), 620),
+   
+  -- 22. Tehran to Bandar Abbas
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Bandar Abbas'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Bandar Abbas Bus Terminal'), 1450),
+   
+  -- 23. Tehran to Bandar Abbas (air)
+  ((SELECT id FROM city WHERE county = 'Tehran'), (SELECT id FROM city WHERE county = 'Bandar Abbas'), 
+   (SELECT id FROM terminal WHERE name = 'Mehrabad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Bandar Abbas International Airport'), 1250),
+   
+  -- 24. Mashhad to Isfahan
+  ((SELECT id FROM city WHERE county = 'Mashhad'), (SELECT id FROM city WHERE county = 'Isfahan'), 
+   (SELECT id FROM terminal WHERE name = 'Mashhad Central Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Isfahan Kaveh Bus Terminal'), 1020),
+   
+  -- 25. Mashhad to Shiraz
+  ((SELECT id FROM city WHERE county = 'Mashhad'), (SELECT id FROM city WHERE county = 'Shiraz'), 
+   (SELECT id FROM terminal WHERE name = 'Mashhad International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Shiraz International Airport'), 1150),
+   
+  -- 26. Isfahan to Shiraz
+  ((SELECT id FROM city WHERE county = 'Isfahan'), (SELECT id FROM city WHERE county = 'Shiraz'), 
+   (SELECT id FROM terminal WHERE name = 'Isfahan Kaveh Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Shiraz Karandish Bus Terminal'), 540),
+   
+  -- 27. Isfahan to Yazd
+  ((SELECT id FROM city WHERE county = 'Isfahan'), (SELECT id FROM city WHERE county = 'Yazd'), 
+   (SELECT id FROM terminal WHERE name = 'Isfahan Kaveh Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Yazd Bus Terminal'), 270),
+   
+  -- 28. Shiraz to Bandar Abbas
+  ((SELECT id FROM city WHERE county = 'Shiraz'), (SELECT id FROM city WHERE county = 'Bandar Abbas'), 
+   (SELECT id FROM terminal WHERE name = 'Shiraz International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Bandar Abbas International Airport'), 670),
+   
+  -- 29. Tabriz to Urmia
+  ((SELECT id FROM city WHERE county = 'Tabriz'), (SELECT id FROM city WHERE county = 'Urmia'), 
+   (SELECT id FROM terminal WHERE name = 'Tabriz Central Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Urmia Bus Terminal'), 150),
+   
+  -- 30. Tabriz to Hamadan
+  ((SELECT id FROM city WHERE county = 'Tabriz'), (SELECT id FROM city WHERE county = 'Hamadan'), 
+   (SELECT id FROM terminal WHERE name = 'Tabriz International Airport'), 
+   (SELECT id FROM terminal WHERE name = 'Hamadan Airport'), 480),
+   
+  -- Reverse routes
+  -- 31. Mashhad to Tehran
+  ((SELECT id FROM city WHERE county = 'Mashhad'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Mashhad Central Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 925),
+   
+  -- 32. Isfahan to Tehran
+  ((SELECT id FROM city WHERE county = 'Isfahan'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Isfahan Kaveh Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 450),
+   
+  -- 33. Shiraz to Tehran
+  ((SELECT id FROM city WHERE county = 'Shiraz'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Shiraz Karandish Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 750),
+   
+  -- 34. Tabriz to Tehran
+  ((SELECT id FROM city WHERE county = 'Tabriz'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Tabriz Central Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran West Bus Terminal'), 675),
+   
+  -- 35. Ahvaz to Tehran
+  ((SELECT id FROM city WHERE county = 'Ahvaz'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Ahvaz Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 750),
+   
+  -- 36. Karaj to Tehran
+  ((SELECT id FROM city WHERE county = 'Karaj'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Karaj Central Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran East Bus Terminal'), 150),
+   
+  -- 37. Rasht to Tehran
+  ((SELECT id FROM city WHERE county = 'Rasht'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Rasht Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran West Bus Terminal'), 355),
+   
+  -- 38. Yazd to Tehran
+  ((SELECT id FROM city WHERE county = 'Yazd'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Yazd Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 700),
+   
+  -- 39. Bandar Abbas to Tehran
+  ((SELECT id FROM city WHERE county = 'Bandar Abbas'), (SELECT id FROM city WHERE county = 'Tehran'), 
+   (SELECT id FROM terminal WHERE name = 'Bandar Abbas Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tehran South Bus Terminal'), 1450),
+   
+  -- 40. Urmia to Tabriz
+  ((SELECT id FROM city WHERE county = 'Urmia'), (SELECT id FROM city WHERE county = 'Tabriz'), 
+   (SELECT id FROM terminal WHERE name = 'Urmia Bus Terminal'), 
+   (SELECT id FROM terminal WHERE name = 'Tabriz Central Bus Terminal'), 150);
+
