@@ -206,3 +206,4 @@ VALUES (
   5, -- count_stand (5 standing tickets available)
   'NOT_RESERVED' -- status
 );
+

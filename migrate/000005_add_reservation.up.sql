@@ -24,7 +24,7 @@ CREATE TABLE "reservation" (
   "id" bigserial PRIMARY KEY,
   "user_id" bigint NOT NULL,
   "ticket_id" bigint NOT NULL,
-  "payment_id" bigint NOT NULL,
+  "payment_id" bigint,
   "status" ticket_status NOT NULL DEFAULT 'RESERVING',
   "duration_time" interval NOT NULL DEFAULT '10 minutes',
   "created_at" timestamptz NOT NULL DEFAULT (now())
