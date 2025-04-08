@@ -108,6 +108,7 @@ VALUES
 (25, 'ECONOMY', 'MD-80'),
 (26, 'PREMIUM-ECONOMY', 'Boeing 737');
 
+-- Insert seat 
 DO $$
 DECLARE
   rec RECORD;
@@ -125,3 +126,25 @@ BEGIN
   END LOOP;
 END;
 $$;
+
+INSERT INTO bus_seat (seat_id)
+SELECT s.id
+FROM seat s
+JOIN vehicle v ON s.vehicle_id = v.id
+WHERE s.vehicle_type = 'BUS';
+
+INSERT INTO bus_seat (seat_id)
+SELECT s.id
+FROM seat s
+JOIN vehicle v ON s.vehicle_id = v.id
+WHERE s.vehicle_type = 'AIRPLANE';
+
+INSERT INTO train_seat (seat_id, salon, have_compartment, cuope_number)
+SELECT 
+	s.id,
+	(s.seat_number - 1) / 50 + 1 AS salon,
+ 	t.have_compartment,
+  	((s.seat_number - 1) % 50) / 6 + 1 AS cuope_number
+FROM seat s
+JOIN vehicle v ON s.vehicle_id = v.id
+JOIN train t ON t.vehicle_id = v.id;
