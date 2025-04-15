@@ -242,3 +242,7 @@
     WHERE r.user_id = (SELECT pro.user_id FROM "profile" pro
     WHERE pro.last_name = 'Redigton'
     LIMIT 1) AND r.status IN ('CANCELED', 'CANCELED-BY-TIME');
+
+-- 20)
+    DELETE FROM "reservation" re
+    WHERE re.status IN ('CANCELED', 'CANCELED-BY-TIME');
