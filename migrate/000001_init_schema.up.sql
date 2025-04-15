@@ -31,14 +31,6 @@ CREATE TABLE "profile" (
   "national_code" varchar
 );
 
-CREATE TABLE "report" (
-  "id" bigserial PRIMARY KEY,
-  "user_id" bigint NOT NULL,
-  "admin_id" bigint NOT NULL,
-  "request_text" text NOT NULL,
-  "response_text" text NOT NULL
-);
-
 
 CREATE TABLE "city" (
   "id" bigserial PRIMARY KEY,
@@ -67,11 +59,7 @@ CREATE INDEX ON "profile" ("user_id");
 CREATE INDEX ON "city" ("province");
 CREATE INDEX ON "city" ("county");
 CREATE INDEX ON "city" ("province", "county");
-CREATE INDEX ON "report" ("user_id");
-CREATE INDEX ON "report" ("admin_id");
-CREATE INDEX ON "report" ("user_id", "admin_id");
 
-ALTER TABLE "report" ADD FOREIGN KEY ("admin_id") REFERENCES "user" ("id");
 ALTER TABLE "profile" 
 ADD FOREIGN KEY ("user_id") 
 REFERENCES "user" ("id");

@@ -119,38 +119,141 @@ INSERT INTO "reservation" (
   NOW() - INTERVAL '5 day'
 );
 
--- Create a few admin changes to reservations
-INSERT INTO "admin_change_reservation" (
-  "reservation_id",
-  "admin_id",
-  "user_id",
-  "from_status",
-  "to_status"
-) VALUES
--- Admin canceled a reservation
-(
-  (SELECT id FROM "reservation" WHERE
-    user_id = (SELECT id FROM "user" WHERE email = 'user8@example.com') AND
-    status = 'CANCELED-BY-TIME' LIMIT 1),
-  (SELECT id FROM "user" WHERE email = 'admin@transport.ir'),
-  (SELECT id FROM "user" WHERE email = 'user8@example.com'),
+-- Admin canceled a reservation (for user8@example.com), admin_id = NULL since it's BY-TIME
+INSERT INTO "change_reservation" (
+  reservation_id, admin_id, user_id, from_status, to_status
+)
+SELECT
+  r.id,
+  NULL,
+  user8.id,
   'RESERVED',
   'CANCELED-BY-TIME'
-),
--- Support admin helped with a reservation
-(
-  (SELECT id FROM "reservation" WHERE
-    user_id = (SELECT id FROM "user" WHERE email = 'user1@example.com') AND
-    ticket_id = (SELECT id FROM "ticket" WHERE vehicle_id = 1 LIMIT 1)),
-  (SELECT id FROM "user" WHERE email = 'support@transport.ir'),
-  (SELECT id FROM "user" WHERE email = 'user1@example.com'),
+FROM "reservation" r
+JOIN "user" user8 ON r.user_id = user8.id AND user8.email = 'user8@example.com'
+WHERE r.status = 'CANCELED-BY-TIME'
+LIMIT 1;
+
+-- Support admin helped change a reservation (for user1@example.com)
+INSERT INTO "change_reservation" (
+  reservation_id, admin_id, user_id, from_status, to_status
+)
+SELECT
+  r.id,
+  support.id,
+  user1.id,
   'RESERVING',
   'RESERVED'
-);
+FROM "reservation" r
+JOIN "user" user1 ON r.user_id = user1.id AND user1.email = 'user1@example.com'
+JOIN "user" support ON support.email = 'support@transport.ir'
+JOIN "ticket" t ON r.ticket_id = t.id AND t.vehicle_id = 1
+LIMIT 1;
+
+-- A user made a manual status change (user3@example.com updated their own reservation)
+INSERT INTO "change_reservation" (
+  reservation_id, admin_id, user_id, from_status, to_status
+)
+SELECT
+  r.id,
+  1,
+  user3.id,
+  'RESERVED',
+  'CANCELED'
+FROM "reservation" r
+JOIN "user" user3 ON r.user_id = user3.id AND user3.email = 'user3@example.com'
+WHERE r.status = 'RESERVED'
+LIMIT 1;
+
+-- Another admin-assisted status correction (for user2@example.com)
+INSERT INTO "change_reservation" (
+  reservation_id, admin_id, user_id, from_status, to_status
+)
+SELECT
+  r.id,
+  admin2.id,
+  user2.id,
+  'RESERVING',
+  'RESERVED'
+FROM "reservation" r
+JOIN "user" user2 ON r.user_id = user2.id AND user2.email = 'user2@example.com'
+JOIN "user" admin2 ON admin2.email = 'admin2@transport.ir'
+JOIN "ticket" t ON r.ticket_id = t.id AND t.vehicle_id = 22
+WHERE r.status = 'RESERVING'
+LIMIT 1;
+
+-- Admin changed from RESERVED to CANCELED (for user4@example.com)
+INSERT INTO "change_reservation" (
+  reservation_id, admin_id, user_id, from_status, to_status
+)
+SELECT
+  r.id,
+  admin3.id,
+  user4.id,
+  'RESERVED',
+  'CANCELED'
+FROM "reservation" r
+JOIN "user" user4 ON r.user_id = user4.id AND user4.email = 'user4@example.com'
+JOIN "user" admin3 ON admin3.email = 'admin3@transport.ir'
+WHERE r.status = 'CANCELED'
+LIMIT 1;
+
+-- Admin restored from CANCELED to RESERVED (for user5@example.com)
+INSERT INTO "change_reservation" (
+  reservation_id, admin_id, user_id, from_status, to_status
+)
+SELECT
+  r.id,
+  admin4.id,
+  user5.id,
+  'CANCELED',
+  'RESERVED'
+FROM "reservation" r
+JOIN "user" user5 ON r.user_id = user5.id AND user5.email = 'user5@example.com'
+JOIN "user" admin4 ON admin4.email = 'admin4@transport.ir'
+WHERE r.status = 'RESERVED'
+LIMIT 1;
+
 
 -- Update ticket status to match reservations
 UPDATE "ticket"
 SET "status" = 'RESERVED'
 WHERE id IN (
   SELECT ticket_id FROM "reservation" WHERE status = 'RESERVED'
+);
+
+INSERT INTO report (
+  reservation_id, user_id, admin_id, request_text, response_text
+) VALUES (
+  (SELECT id FROM reservation 
+   WHERE user_id = (SELECT id FROM "user" WHERE email = 'user4@example.com') 
+   ORDER BY created_at DESC LIMIT 1),
+  (SELECT id FROM "user" WHERE email = 'user4@example.com'),
+  (SELECT id FROM "user" WHERE email = 'support@transport.ir'),
+  'Can I upgrade my seat to a window seat?',
+  'Yes, please log in to your account and choose "Modify Reservation" to select a new seat.'
+);
+
+INSERT INTO report (
+  reservation_id, user_id, admin_id, request_text, response_text
+) VALUES (
+  (SELECT id FROM reservation 
+   WHERE user_id = (SELECT id FROM "user" WHERE email = 'user5@example.com') 
+   ORDER BY created_at DESC LIMIT 1),
+  (SELECT id FROM "user" WHERE email = 'user5@example.com'),
+  (SELECT id FROM "user" WHERE email = 'manager@transport.ir'),
+  'My payment failed during booking, but money was deducted. What should I do?',
+  'We are checking with the payment gateway. If the payment is not confirmed within 24 hours, the amount will be refunded automatically.'
+);
+
+INSERT INTO report (
+  reservation_id, user_id, admin_id, request_text, response_text
+) VALUES (
+  (SELECT id FROM reservation 
+   WHERE user_id = (SELECT id FROM "user" WHERE email = 'user3@example.com') 
+   ORDER BY created_at DESC LIMIT 1),
+  (SELECT id FROM "user" WHERE email = 'user3@example.com'),
+  (SELECT id FROM "user" WHERE email = 'admin@transport.ir'),
+  'I missed my bus. Can I use the same ticket for the next departure?',
+  'Unfortunately, tickets are only valid for the reserved departure time. You will need to purchase a new ticket.'
 );
