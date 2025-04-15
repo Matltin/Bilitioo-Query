@@ -45,7 +45,7 @@
     SELECT 
         u.id,
         CONCAT(pro.first_name, ' ', pro.last_name) AS full_name,
-        CONCAT(dc.province, '(', dc.county, ')') AS destination,
+        CONCAT(dc.province, '  (', dc.county, ')') AS destination,
         COUNT(dc.county) AS "tripNO."
     FROM "user" u
     INNER JOIN "profile" pro ON u.id = pro.user_id
@@ -117,7 +117,7 @@
 	SELECT 
 		oc.county AS origin,
 		'Tehran' AS origin,
-        CONCAT(dc.province, '(', dc.county, ')') AS destination,
+        CONCAT(dc.province, '  (', dc.county, ')') AS destination,
         COUNT(dc.county) AS "tripNO."
     FROM "ticket" t
     INNER JOIN "reservation" re ON t.id = re.ticket_id
@@ -127,3 +127,27 @@
 	WHERE oc.county = 'Tehran'
     GROUP BY oc.county, dc.province, dc.county;
 
+-- 10)
+    SELECT 
+        u.id, 
+		CONCAT(oc.province, '  (', oc.county, ')') AS origin
+	FROM "user" u
+    INNER JOIN "reservation" re ON u.id = re.user_id
+    INNER JOIN "payment" pa ON pa.id = re.payment_id
+    INNER JOIN "ticket" t ON re.ticket_id = t.id
+    INNER JOIN "route" ro ON t.route_id = ro.id
+    INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+    WHERE u.id = (SELECT u.id FROM "user" u 
+    WHERE u.role = 'USER'
+    ORDER BY u.created_at DESC 
+    LIMIT 1) AND pa.status = 'COMPLETED'
+    GROUP BY u.id, oc.province, oc.county;
+
+-- 11)
+    SELECT 
+        u.id,
+        CONCAT(pro.first_name, ' ', pro.last_name) AS full_name
+    FROM "user" u
+    INNER JOIN "profile" pro ON u.id = pro.user_id
+    WHERE u.role = 'ADMIN'
+    ORDER BY u.id;
