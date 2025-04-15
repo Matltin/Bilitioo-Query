@@ -58,3 +58,43 @@
     HAVING COUNT(dc.county) = 1
     ORDER BY u.id;
 
+-- 5)
+    SELECT 
+        u.id,
+        CONCAT(pro.first_name, ' ', pro.last_name) AS full_name,
+        TO_CHAR(pa.created_at, 'YYYY-MM-DD	HH24:MI:SS') AS "created at"
+    FROM "user" u
+    INNER JOIN "profile" pro ON u.id = pro.user_id
+    INNER JOIN "reservation" re ON u.id = re.user_id
+    INNER JOIN "ticket" t ON re.ticket_id = t.id
+    INNER JOIN "payment" pa ON pa.id = re.payment_id
+    WHERE pa.status = 'COMPLETED'
+    ORDER BY pa.created_at DESC
+    LIMIT 1;
+
+-- 6)
+    SELECT 
+        u.id, 
+        COALESCE(u.email, 'No Email') AS email, 
+        COALESCE(u.phone_number, 'No Phone') AS phone_number, 
+        SUM(p.amount) AS "total amount" FROM "user" u
+    INNER JOIN "reservation" r ON u.id = r.user_id
+    INNER JOIN "payment" p ON p.id = r.payment_id
+    GROUP BY u.id, u.email, u.phone_number
+    HAVING SUM(p.amount) > (SELECT AVG(p.amount)
+        FROM "user" u
+        INNER JOIN "reservation" re ON re.user_id = u.id
+        INNER JOIN "payment" p ON p.id = re.payment_id
+        WHERE p.status = 'COMPLETED'
+    );
+
+-- 7)
+    SELECT 
+        t.vehicle_type, 
+        COUNT(t.id) AS "NO." 
+    FROM "ticket" t
+    INNER JOIN "reservation" r ON r.ticket_id = t.id
+    INNER JOIN "payment" p ON p.id = r.payment_id
+    WHERE p.status = 'COMPLETED'
+    GROUP BY t.vehicle_type
+    ORDER BY "NO." DESC;
