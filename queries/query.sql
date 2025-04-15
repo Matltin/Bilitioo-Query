@@ -98,3 +98,32 @@
     WHERE p.status = 'COMPLETED'
     GROUP BY t.vehicle_type
     ORDER BY "NO." DESC;
+
+-- 8)
+    SELECT 
+        u.id, 
+        CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+        COUNT(re.id) AS "NO."
+    FROM "user" u
+    INNER JOIN "profile" pro ON u.id = pro.user_id
+    INNER JOIN "reservation" re ON u.id = re.user_id
+    INNER JOIN "payment" pa ON pa.id = re.payment_id
+    WHERE pa.status = 'COMPLETED' AND pa.created_at > NOW() - INTERVAL '7 days'
+    GROUP BY u.id, pro.first_name, pro.last_name
+    ORDER BY "NO." DESC
+    LIMIT 3;
+
+-- 9)
+	SELECT 
+		oc.county AS origin,
+		'Tehran' AS origin,
+        CONCAT(dc.province, '(', dc.county, ')') AS destination,
+        COUNT(dc.county) AS "tripNO."
+    FROM "ticket" t
+    INNER JOIN "reservation" re ON t.id = re.ticket_id
+    INNER JOIN "route" ro ON t.route_id = ro.id
+    INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+    INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+	WHERE oc.county = 'Tehran'
+    GROUP BY oc.county, dc.province, dc.county;
+
