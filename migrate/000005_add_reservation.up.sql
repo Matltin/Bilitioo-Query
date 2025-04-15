@@ -1,3 +1,10 @@
+CREATE TYPE "request_type" AS ENUM (
+  'PAYMENT-ISSUE',
+  'TRAVEL-DELAY',
+  'UNEXPECTED-RESERVED',
+  'ETC.'
+);
+
 CREATE TYPE "ticket_status" AS ENUM (
   'RESERVED',
   'RESERVING',
@@ -54,6 +61,7 @@ CREATE TABLE "report" (
   "reservation_id" bigint NOT NULL,
   "user_id" bigint NOT NULL,
   "admin_id" bigint NOT NULL,
+  "request_type" request_type NOT NULL DEFAULT 'ETC.',
   "request_text" text NOT NULL,
   "response_text" text NOT NULL
 );

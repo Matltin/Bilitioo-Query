@@ -223,37 +223,40 @@ WHERE id IN (
 );
 
 INSERT INTO report (
-  reservation_id, user_id, admin_id, request_text, response_text
+  reservation_id, user_id, admin_id, request_type, request_text, response_text
 ) VALUES (
   (SELECT id FROM reservation 
    WHERE user_id = (SELECT id FROM "user" WHERE email = 'user4@example.com') 
    ORDER BY created_at DESC LIMIT 1),
   (SELECT id FROM "user" WHERE email = 'user4@example.com'),
   (SELECT id FROM "user" WHERE email = 'support@transport.ir'),
+  'ETC.',
   'Can I upgrade my seat to a window seat?',
   'Yes, please log in to your account and choose "Modify Reservation" to select a new seat.'
 );
 
 INSERT INTO report (
-  reservation_id, user_id, admin_id, request_text, response_text
+  reservation_id, user_id, admin_id, request_type, request_text, response_text
 ) VALUES (
   (SELECT id FROM reservation 
    WHERE user_id = (SELECT id FROM "user" WHERE email = 'user5@example.com') 
    ORDER BY created_at DESC LIMIT 1),
   (SELECT id FROM "user" WHERE email = 'user5@example.com'),
   (SELECT id FROM "user" WHERE email = 'manager@transport.ir'),
+  'ETC.',
   'My payment failed during booking, but money was deducted. What should I do?',
   'We are checking with the payment gateway. If the payment is not confirmed within 24 hours, the amount will be refunded automatically.'
 );
 
 INSERT INTO report (
-  reservation_id, user_id, admin_id, request_text, response_text
+  reservation_id, user_id, admin_id, request_type, request_text, response_text
 ) VALUES (
   (SELECT id FROM reservation 
    WHERE user_id = (SELECT id FROM "user" WHERE email = 'user3@example.com') 
    ORDER BY created_at DESC LIMIT 1),
   (SELECT id FROM "user" WHERE email = 'user3@example.com'),
   (SELECT id FROM "user" WHERE email = 'admin@transport.ir'),
+  'TRAVEL-DELAY',
   'I missed my bus. Can I use the same ticket for the next departure?',
   'Unfortunately, tickets are only valid for the reserved departure time. You will need to purchase a new ticket.'
 );
