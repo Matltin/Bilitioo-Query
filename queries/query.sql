@@ -246,3 +246,17 @@
 -- 20)
     DELETE FROM "reservation" re
     WHERE re.status IN ('CANCELED', 'CANCELED-BY-TIME');
+
+-- 22) 
+    SELECT 
+        rep.*, 
+        sub.rep_count
+    FROM "report" rep 
+    INNER JOIN (SELECT  
+            rep.reservation_id,
+            COUNT(rep.reservation_id) AS rep_count
+        FROM "reservation" re
+        INNER JOIN "report" rep ON rep.reservation_id = re.id
+        GROUP BY rep.user_id, rep.reservation_id
+        ORDER BY rep_count DESC LIMIT 1
+    ) sub ON rep.reservation_id = sub.reservation_id;
