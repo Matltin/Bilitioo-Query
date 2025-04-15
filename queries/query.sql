@@ -182,3 +182,63 @@
     GROUP BY u.id, pro.first_name, pro.last_name, t.vehicle_type
     HAVING COUNT(r.ticket_id) > 1
     ORDER BY u.id;
+
+-- 15)
+    SELECT 
+        u.id,
+        CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+        t.id AS "ticket id",
+        t.vehicle_type,
+        TO_CHAR(pa.created_at, 'YYYY-MM-DD HH24:MI:SS') AS issued
+    FROM "user" u
+    INNER JOIN "profile" pro ON u.id = pro.user_id
+    INNER JOIN "reservation" r ON u.id = r.user_id
+    INNER JOIN "ticket" t ON  t.id = r.ticket_id
+    INNER JOIN "payment" pa ON  pa.id = r.payment_id
+    WHERE pa.status = 'COMPLETED' AND pa.created_at >= date_trunc('day', now())
+    ORDER BY pa.created_at;
+
+-- 17)
+    WITH canceled_changes AS (
+    SELECT 
+        cr.admin_id, 
+        CONCAT(pro.first_name, ' ', pro.last_name) AS full_name,
+        COUNT(cr.id) AS cancel_count
+    FROM change_reservation cr
+    INNER JOIN "profile" pro ON pro.user_id = cr.admin_id
+    WHERE cr.from_status NOT IN ('CANCELED', 'CANCELED-BY-TIME')
+        AND cr.to_status = 'CANCELED'
+    GROUP BY cr.admin_id, pro.first_name, pro.last_name
+    ),
+    total_canceled AS (
+    SELECT COUNT(*) AS total FROM change_reservation
+    WHERE from_status NOT IN ('CANCELED', 'CANCELED-BY-TIME')
+        AND to_status = 'CANCELED'
+    )
+    SELECT 
+    cc.admin_id,
+    cc.full_name,
+    cc.cancel_count AS "NO. of Cancellations",
+    ROUND((cc.cancel_count::decimal / tc.total) * 100, 2) AS "Cancellation Percentage"
+    FROM canceled_changes cc, total_canceled tc
+    ORDER BY cc.cancel_count DESC
+    LIMIT 1; 
+
+-- 18)
+    UPDATE "profile"
+    SET last_name = 'Redington'
+    WHERE user_id = (
+    SELECT cr.user_id
+    FROM "change_reservation" cr
+    WHERE cr.from_status NOT IN ('CANCELED', 'CANCELED-BY-TIME')
+        AND cr.to_status = 'CANCELED'
+    GROUP BY cr.user_id
+    ORDER BY COUNT(cr.id) DESC
+    LIMIT 1
+    );
+
+-- 19)
+    DELETE FROM "reservation" r
+    WHERE r.user_id = (SELECT pro.user_id FROM "profile" pro
+    WHERE pro.last_name = 'Redigton'
+    LIMIT 1) AND r.status IN ('CANCELED', 'CANCELED-BY-TIME');
