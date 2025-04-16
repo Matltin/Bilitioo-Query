@@ -96,6 +96,60 @@
     END;
     $$;
 
+-- 4) 
+    DROP FUNCTION IF EXISTS get_find_match(VARCHAR);
+
+    CREATE OR REPLACE FUNCTION get_find_match(inp VARCHAR)
+    RETURNS TABLE(
+        user_id BIGINT,
+        ticket_id BIGINT,
+        full_name VARCHAR,
+        origin_city VARCHAR,
+        destination_city VARCHAR,
+    extra_info VARCHAR
+    )
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        RETURN QUERY 
+        
+        SELECT 
+            u.id,
+            t.id,
+            CONCAT(p.first_name, ' ', p.last_name)::VARCHAR AS full_name, 
+            CONCAT(oc.province, '  (', oc.county, ')')::VARCHAR AS origin_city,
+            CONCAT(dc.province, '  (', dc.county, ')')::VARCHAR AS destination_city,
+      (CASE 
+              WHEN b."VIP" IS NOT NULL THEN 
+                  CASE WHEN b."VIP" THEN 'VIP' ELSE 'Not VIP' END
+              WHEN tr.rank IS NOT NULL THEN 'Train Rank: ' || tr.rank
+              WHEN ai.flight_class IS NOT NULL THEN 'Flight Class: ' || ai.flight_class
+              ELSE NULL
+          END)::VARCHAR AS extra_info
+        FROM "ticket" t
+        INNER JOIN "reservation" re ON re.ticket_id = t.id
+        INNER JOIN "user" u ON u.id = re.user_id
+        INNER JOIN "profile" p ON p.user_id = u.id
+        INNER JOIN "route" ro ON ro.id = t.route_id
+        INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+        INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+        INNER JOIN "vehicle" v ON v.id = t.vehicle_id
+        LEFT JOIN "bus" b ON v.id = b.vehicle_id
+        LEFT JOIN "train" tr ON v.id = tr.vehicle_id
+        LEFT JOIN "airplane" ai ON v.id = ai.vehicle_id
+        WHERE CONCAT(p.first_name, ' ', p.last_name) ILIKE CONCAT('%', inp, '%') OR
+            CONCAT(oc.province, '  (', oc.county, ')') ILIKE CONCAT('%', inp, '%') OR
+            CONCAT(dc.province, '  (', dc.county, ')') ILIKE CONCAT('%', inp, '%') OR
+            tr.rank::VARCHAR ILIKE CONCAT('%', inp, '%') OR
+            (
+                'vip' ILIKE CONCAT('%', inp, '%') 
+            ) OR (
+                'notvip' ILIKE CONCAT('%', inp, '%')
+            ) OR
+            ai.flight_class::VARCHAR ILIKE CONCAT('%', inp, '%');
+    END;
+    $$;
+
 -- 5) 
     DROP FUNCTION IF EXISTS get_townsman(VARCHAR);
 
@@ -186,5 +240,40 @@
         WHERE inp_vehicle ILIKE t.vehicle_type::VARCHAR
         AND re.status IN ('CANCELED', 'CANCELED-BY-TIME')
         ORDER BY t.created_at;
+    END;
+    $$;
+
+-- 8)
+    DROP FUNCTION IF EXISTS get_request_type(VARCHAR);
+
+    CREATE OR REPLACE FUNCTION get_request_type(inp VARCHAR)
+    RETURNS TABLE(
+        id BIGINT,
+        full_name VARCHAR,
+        report_count VARCHAR
+    )
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+        RETURN QUERY 
+        WITH report_counts AS (
+            SELECT 
+                u.id AS user_id, 
+                COUNT(*) AS rep_count
+            FROM "user" u
+            INNER JOIN "report" r ON r.user_id = u.id
+            GROUP BY u.id
+        )
+        SELECT 
+            u.id,
+            CONCAT(p.first_name, ' ', p.last_name)::VARCHAR AS full_name,
+            rc.rep_count::VARCHAR
+        FROM report_counts rc
+        JOIN "user" u ON u.id = rc.user_id
+        JOIN "profile" p ON p.user_id = u.id
+        WHERE rc.rep_count = (
+            SELECT MAX(rep_count) 
+            FROM report_counts
+        );
     END;
     $$;
