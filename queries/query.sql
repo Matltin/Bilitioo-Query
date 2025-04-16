@@ -183,6 +183,24 @@
     HAVING COUNT(r.ticket_id) > 1
     ORDER BY u.id;
 
+-- 14)
+SELECT 
+  u.id, 
+    COALESCE(u.email, 'No Email') AS email, 
+    COALESCE(u.phone_number, 'No Phone') AS phone_number
+FROM "user" u
+WHERE NOT EXISTS (
+    SELECT t.vehicle_type
+    FROM "ticket" t
+    WHERE t.vehicle_type IN ('BUS', 'AIRPLANE', 'TRAIN')
+    EXCEPT
+    SELECT t.vehicle_type
+    FROM "reservation" r
+    INNER JOIN "ticket" t ON r.ticket_id = t.id
+    INNER JOIN "payment" p ON r.payment_id = p.id
+    WHERE r.user_id = u.id AND p.status = 'COMPLETED'
+);
+
 -- 15)
     SELECT 
         u.id,
@@ -197,6 +215,24 @@
     INNER JOIN "payment" pa ON  pa.id = r.payment_id
     WHERE pa.status = 'COMPLETED' AND pa.created_at >= date_trunc('day', now())
     ORDER BY pa.created_at;
+
+-- 16)
+    SELECT 
+    t.id, 
+    t.vehicle_type, 
+    CONCAT(oc.province, '  (', oc.county, ')') AS origin,
+    CONCAT(dc.province, '  (', dc.county, ')') AS destination,
+    COUNT(r.id) AS "NO." FROM "change_reservation" cr
+    INNER JOIN "reservation" r ON cr.reservation_id = r.id
+    INNER JOIN "ticket" t ON t.id = r.ticket_id
+    INNER JOIN "route" ro ON t.route_id = ro.id
+    INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+    INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+    WHERE cr.to_status = 'RESERVED'
+    GROUP BY t.id, t.vehicle_type, oc.province, oc.county, dc.province, dc.county
+    ORDER BY "NO."
+    LIMIT 1
+    OFFSET 1;
 
 -- 17)
     WITH canceled_changes AS (
@@ -246,6 +282,25 @@
 -- 20)
     DELETE FROM "reservation" re
     WHERE re.status IN ('CANCELED', 'CANCELED-BY-TIME');
+
+-- 21)
+    UPDATE "ticket"
+    SET amount = amount * 0.9
+    WHERE vehicle_id IN (
+    SELECT v.id FROM "vehicle" v
+    INNER JOIN "company" c ON v.company_id = c.id
+    WHERE c.name = 'Mahan Air'
+    );
+
+    UPDATE "payment"
+    SET amount = amount * 0.9
+    WHERE id IN (
+    SELECT r.payment_id FROM "reservation" r
+    INNER JOIN "ticket" t ON r.ticket_id = t.id
+    INNER JOIN "vehicle" v ON t.vehicle_id = v.id
+    INNER JOIN "company" c ON c.id = v.company_id
+    WHERE c.name = 'Mahan Air'
+    );
 
 -- 22) 
     SELECT 
