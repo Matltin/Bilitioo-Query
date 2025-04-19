@@ -20,25 +20,25 @@ CREATE INDEX ON "route" ("origin_city_id", "destination_city_id");
 CREATE INDEX ON "route" ("destination_terminal_id");
 CREATE INDEX ON "route" ("origin_terminal_id", "destination_terminal_id");
 
-ALTER TABLE "ticket" 
-ADD FOREIGN KEY ("route_id") 
-REFERENCES "route" ("id");
+ALTER TABLE "ticket"
+ADD CONSTRAINT ticket_route_id_fkey
+FOREIGN KEY ("route_id") REFERENCES "route"("id") ON DELETE CASCADE;
 
-ALTER TABLE "route" 
-ADD FOREIGN KEY ("origin_city_id") 
-REFERENCES "city" ("id");
+ALTER TABLE "route"
+ADD CONSTRAINT route_origin_city_id_fkey
+FOREIGN KEY ("origin_city_id") REFERENCES "city"("id") ON DELETE CASCADE;
 
-ALTER TABLE "route" 
-ADD FOREIGN KEY ("destination_city_id") 
-REFERENCES "city" ("id");
+ALTER TABLE "route"
+ADD CONSTRAINT route_destination_city_id_fkey
+FOREIGN KEY ("destination_city_id") REFERENCES "city"("id") ON DELETE CASCADE;
 
-ALTER TABLE "route" 
-ADD FOREIGN KEY ("origin_terminal_id") 
-REFERENCES "terminal" ("id");
+ALTER TABLE "route"
+ADD CONSTRAINT route_origin_terminal_id_fkey
+FOREIGN KEY ("origin_terminal_id") REFERENCES "terminal"("id") ON DELETE CASCADE;
 
-ALTER TABLE "route" 
-ADD FOREIGN KEY ("destination_terminal_id") 
-REFERENCES "terminal" ("id");
+ALTER TABLE "route"
+ADD CONSTRAINT route_destination_terminal_id_fkey
+FOREIGN KEY ("destination_terminal_id") REFERENCES "terminal"("id") ON DELETE CASCADE;
 
 ALTER TABLE "route"
 ADD CONSTRAINT distance_validation

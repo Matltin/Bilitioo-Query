@@ -61,9 +61,14 @@ CREATE INDEX ON "city" ("county");
 CREATE INDEX ON "city" ("province", "county");
 
 ALTER TABLE "profile" 
-ADD FOREIGN KEY ("user_id") 
-REFERENCES "user" ("id");
+ADD CONSTRAINT profile_user_id_fkey
+FOREIGN KEY ("user_id") 
+REFERENCES "user" ("id")
+ON DELETE CASCADE;
 
-ALTER TABLE "profile" 
-ADD FOREIGN KEY ("city_id") 
-REFERENCES "city" ("id");
+
+ALTER TABLE "profile"
+ADD CONSTRAINT profile_city_id_fkey
+FOREIGN KEY ("city_id")
+REFERENCES "city" ("id")
+ON DELETE SET NULL;

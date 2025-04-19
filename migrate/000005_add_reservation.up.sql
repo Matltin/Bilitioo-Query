@@ -78,22 +78,40 @@ CREATE INDEX ON "report" ("admin_id");
 
 CREATE INDEX ON "report" ("user_id", "admin_id");
 
-ALTER TABLE "reservation" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "reservation"
+ADD CONSTRAINT reservation_user_id_fkey
+FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;
 
-ALTER TABLE "reservation" ADD FOREIGN KEY ("ticket_id") REFERENCES "ticket" ("id");
+ALTER TABLE "reservation"
+ADD CONSTRAINT reservation_ticket_id_fkey
+FOREIGN KEY ("ticket_id") REFERENCES "ticket"("id") ON DELETE CASCADE;
 
-ALTER TABLE "reservation" ADD FOREIGN KEY ("payment_id") REFERENCES "payment" ("id");
+ALTER TABLE "payment"
+ADD CONSTRAINT payment_reservation_fkey
+FOREIGN KEY ("reservation_id") REFERENCES "reservation"("id") ON DELETE CASCADE;
 
-ALTER TABLE "change_reservation" ADD FOREIGN KEY ("reservation_id") REFERENCES "reservation" ("id");
+ALTER TABLE "change_reservation"
+ADD CONSTRAINT change_reservation_reservation_id_fkey
+FOREIGN KEY ("reservation_id") REFERENCES "reservation"("id") ON DELETE CASCADE;
 
-ALTER TABLE "change_reservation" ADD FOREIGN KEY ("admin_id") REFERENCES "user" ("id");
+ALTER TABLE "change_reservation"
+ADD CONSTRAINT change_reservation_admin_id_fkey
+FOREIGN KEY ("admin_id") REFERENCES "user"("id") ON DELETE CASCADE;
 
-ALTER TABLE "change_reservation" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "change_reservation"
+ADD CONSTRAINT change_reservation_user_id_fkey
+FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;
 
 ALTER TABLE "payment" ADD CONSTRAINT amount_payment_validation CHECK (amount > 0);
 
-ALTER TABLE "report" ADD FOREIGN KEY ("reservation_id") REFERENCES "reservation" ("id");
+ALTER TABLE "report"
+ADD CONSTRAINT report_reservation_id_fkey
+FOREIGN KEY ("reservation_id") REFERENCES "reservation"("id") ON DELETE CASCADE;
 
-ALTER TABLE "report" ADD FOREIGN KEY ("admin_id") REFERENCES "user" ("id");
+ALTER TABLE "report"
+ADD CONSTRAINT report_admin_id_fkey
+FOREIGN KEY ("admin_id") REFERENCES "user"("id") ON DELETE CASCADE;
 
-ALTER TABLE "report" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "report"
+ADD CONSTRAINT report_user_id_fkey
+FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;

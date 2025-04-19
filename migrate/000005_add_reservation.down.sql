@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS "reservation";
 DROP TABLE IF EXISTS "payment";
 
 
+DROP TYPE IF EXISTS "request_type";
 DROP TYPE IF EXISTS "ticket_status";
 DROP TYPE IF EXISTS "payment_type";
 DROP TYPE IF EXISTS "payment_status";
