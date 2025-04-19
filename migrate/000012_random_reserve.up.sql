@@ -116,3 +116,88 @@ BEGIN
     (user3_id, ticket4_id, NULL, 'CANCELED-BY-TIME', '10 minutes', NOW() - INTERVAL '10 hours'),
     (user3_id, ticket5_id, NULL, 'RESERVING', '10 minutes', NOW() - INTERVAL '5 hours');
   
+  -- Now create change_reservation records for these reservations
+  -- Get reservation IDs
+  DECLARE
+    res1_id bigint;
+    res2_id bigint;
+    res3_id bigint;
+    res4_id bigint;
+    res5_id bigint;
+    res6_id bigint;
+    res7_id bigint;
+    res8_id bigint;
+    res9_id bigint;
+    res10_id bigint;
+    res11_id bigint;
+    res12_id bigint;
+    res13_id bigint;
+    res14_id bigint;
+    res15_id bigint;
+  BEGIN
+    -- Get reservation IDs (assuming they're created in order)
+    SELECT id INTO res1_id FROM "reservation" WHERE user_id = user1_id AND ticket_id = ticket1_id;
+    SELECT id INTO res2_id FROM "reservation" WHERE user_id = user1_id AND ticket_id = ticket2_id;
+    SELECT id INTO res3_id FROM "reservation" WHERE user_id = user1_id AND ticket_id = ticket3_id;
+    SELECT id INTO res4_id FROM "reservation" WHERE user_id = user1_id AND ticket_id = ticket4_id;
+    SELECT id INTO res5_id FROM "reservation" WHERE user_id = user1_id AND ticket_id = ticket5_id;
+    SELECT id INTO res6_id FROM "reservation" WHERE user_id = user2_id AND ticket_id = ticket6_id;
+    SELECT id INTO res7_id FROM "reservation" WHERE user_id = user2_id AND ticket_id = ticket7_id;
+    SELECT id INTO res8_id FROM "reservation" WHERE user_id = user2_id AND ticket_id = ticket8_id;
+    SELECT id INTO res9_id FROM "reservation" WHERE user_id = user2_id AND ticket_id = ticket9_id;
+    SELECT id INTO res10_id FROM "reservation" WHERE user_id = user2_id AND ticket_id = ticket10_id;
+    SELECT id INTO res11_id FROM "reservation" WHERE user_id = user3_id AND ticket_id = ticket1_id;
+    SELECT id INTO res12_id FROM "reservation" WHERE user_id = user3_id AND ticket_id = ticket2_id;
+    SELECT id INTO res13_id FROM "reservation" WHERE user_id = user3_id AND ticket_id = ticket3_id;
+    SELECT id INTO res14_id FROM "reservation" WHERE user_id = user3_id AND ticket_id = ticket4_id;
+    SELECT id INTO res15_id FROM "reservation" WHERE user_id = user3_id AND ticket_id = ticket5_id;
+    
+    -- Create change_reservation records (at least 15)
+    INSERT INTO "change_reservation" ("reservation_id", "admin_id", "user_id", "from_status", "to_status") VALUES
+      -- Changes for user1's reservations
+      (res1_id, admin_id, user1_id, 'RESERVING', 'RESERVED'),
+      (res2_id, admin_id, user1_id, 'RESERVING', 'RESERVED'),
+      (res3_id, admin_id, user1_id, 'RESERVING', 'RESERVED'),
+      (res4_id, admin_id, user1_id, 'RESERVING', 'RESERVED'),
+      (res5_id, admin_id, user1_id, 'RESERVING', 'RESERVED'),
+      
+      -- Changes for user2's reservations
+      (res6_id, admin_id, user2_id, 'RESERVING', 'RESERVED'),
+      (res7_id, admin_id, user2_id, 'RESERVING', 'RESERVED'),
+      (res8_id, admin_id, user2_id, 'RESERVING', 'RESERVED'),
+      (res9_id, admin_id, user2_id, 'RESERVING', 'RESERVED'),
+      (res10_id, admin_id, user2_id, 'RESERVING', 'RESERVED'),
+      
+      -- Changes for user3's reservations (including cancellations)
+      (res11_id, admin_id, user3_id, 'RESERVING', 'RESERVED'),
+      (res12_id, NULL, user3_id, 'RESERVING', 'RESERVING'), -- No admin, status didn't change
+      (res13_id, admin_id, user3_id, 'RESERVING', 'CANCELED'),
+      (res14_id, NULL, user3_id, 'RESERVING', 'CANCELED-BY-TIME'), -- Automatic cancellation
+      (res15_id, NULL, user3_id, 'RESERVING', 'RESERVING'); -- Still in progress
+    
+    -- Create reports for some of these reservations (at least 15)
+    INSERT INTO "report" ("reservation_id", "user_id", "admin_id", "request_type", "request_text", "response_text") VALUES
+      -- Reports for user1
+      (res1_id, user1_id, admin_id, 'PAYMENT-ISSUE', 'Payment was deducted but reservation not confirmed', 'Issue resolved, reservation confirmed'),
+      (res2_id, user1_id, admin_id, 'TRAVEL-DELAY', 'Bus was 2 hours late', 'Apologies, we have issued a 10% discount coupon'),
+      (res3_id, user1_id, admin_id, 'ETC.', 'Seat was not as described', 'We have noted your feedback for improvement'),
+      
+      -- Reports for user2
+      (res6_id, user2_id, admin_id, 'PAYMENT-ISSUE', 'Double charged for reservation', 'Refund processed for the extra charge'),
+      (res7_id, user2_id, admin_id, 'UNEXPECTED-RESERVED', 'Got a different seat than selected', 'We have upgraded your seat as compensation'),
+      (res8_id, user2_id, admin_id, 'TRAVEL-DELAY', 'Flight delayed by 3 hours', 'We provided meal vouchers during the wait'),
+      (res9_id, user2_id, admin_id, 'ETC.', 'Lost luggage during travel', 'Luggage located and will be delivered to you'),
+      
+      -- Reports for user3
+      (res11_id, user3_id, admin_id, 'PAYMENT-ISSUE', 'Payment failed but money deducted', 'Payment was actually successful, ticket confirmed'),
+      (res12_id, user3_id, admin_id, 'TRAVEL-DELAY', 'Train delayed by 1 hour', 'We apologize for the inconvenience'),
+      (res13_id, user3_id, admin_id, 'UNEXPECTED-RESERVED', 'Cancellation fee too high', 'Fee adjusted as per our policy'),
+      (res14_id, user3_id, admin_id, 'ETC.', 'Website was slow during booking', 'We are working on performance improvements'),
+      
+      -- More reports for various issues
+      (res1_id, user1_id, admin_id, 'ETC.', 'Driver was rude', 'Driver will receive additional training'),
+      (res5_id, user1_id, admin_id, 'TRAVEL-DELAY', 'No AC on the bus', 'Mechanical issue, we have compensated with discount'),
+      (res7_id, user2_id, admin_id, 'PAYMENT-ISSUE', 'Receipt not received', 'Receipt resent to your email'),
+      (res10_id, user2_id, admin_id, 'UNEXPECTED-RESERVED', 'Wrong departure time shown', 'We have corrected the information');
+  END;
+END $$;
