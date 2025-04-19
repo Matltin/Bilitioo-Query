@@ -276,7 +276,7 @@ WHERE NOT EXISTS (
 -- 19)
     DELETE FROM "reservation" r
     WHERE r.user_id = (SELECT pro.user_id FROM "profile" pro
-    WHERE pro.last_name = 'Redigton'
+    WHERE pro.last_name = 'Redington'
     LIMIT 1) AND r.status IN ('CANCELED', 'CANCELED-BY-TIME');
 
 -- 20)

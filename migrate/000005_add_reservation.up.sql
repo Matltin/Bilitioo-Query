@@ -86,9 +86,7 @@ ALTER TABLE "reservation"
 ADD CONSTRAINT reservation_ticket_id_fkey
 FOREIGN KEY ("ticket_id") REFERENCES "ticket"("id") ON DELETE CASCADE;
 
-ALTER TABLE "payment"
-ADD CONSTRAINT payment_reservation_fkey
-FOREIGN KEY ("reservation_id") REFERENCES "reservation"("id") ON DELETE CASCADE;
+ALTER TABLE "reservation" ADD FOREIGN KEY ("payment_id") REFERENCES "payment" ("id");
 
 ALTER TABLE "change_reservation"
 ADD CONSTRAINT change_reservation_reservation_id_fkey
