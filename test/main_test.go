@@ -5,13 +5,15 @@ import (
 	"log"
 	"os"
 	"testing"
+
+	_ "github.com/lib/pq" 
 )
 
 var testQueries *Queries
 var testDB *sql.DB
 
 func TestMain(m *testing.M) {
-	testDB, err := sql.Open("postgres", "postgresql://root:secret@localhost:5432/test_for_bilitioo_db?sslmode=disable")
+	testDB, err := sql.Open("postgres", "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable")
 	if err != nil {
 		log.Fatal(err)
 	}
