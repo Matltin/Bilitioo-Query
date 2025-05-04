@@ -199,10 +199,14 @@ func TestUpadateMahanAirCost(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// func TestGetReport(t *testing.T) {
-// 	reports, err := testQueries.GetReport(context.Background())
+func TestGetReport(t *testing.T) {
+	reports, err := testQueries.GetReport(context.Background())
 
-// 	require.NoError(t, err)
-// 	require.NotNil(t, reports)
-// 	require.Equal(t, )
-// }
+	require.NoError(t, err)
+	require.NotNil(t, reports)
+	require.Equal(t, len(reports), 3)
+
+	for i := 1; i < len(reports); i++ {
+		require.Equal(t, reports[i].TicketID, reports[i - 1].TicketID)
+	}
+}

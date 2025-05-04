@@ -303,15 +303,22 @@ WHERE c.name = 'Mahan Air'
 );
 
 -- name: GetReport :many
- SELECT 
-    rep.*, 
-    sub.rep_count
-FROM "report" rep 
-INNER JOIN (SELECT  
-        rep.reservation_id,
-        COUNT(rep.reservation_id) AS rep_count
-    FROM "reservation" re
+SELECT 
+    res.ticket_id, 
+    res.id AS reservation_id,
+    repo.request_type, 
+    repo.request_text, 
+    repo.response_text, 
+    sub.rep_count AS rep_count
+FROM "reservation" res
+INNER JOIN "report" repo ON res.id = repo.reservation_id
+INNER JOIN (
+    SELECT 
+        t.id,
+        COUNT(t.id) AS rep_count
+    FROM "ticket" t
+    INNER JOIN "reservation" re ON re.ticket_id = t.id
     INNER JOIN "report" rep ON rep.reservation_id = re.id
-    GROUP BY rep.user_id, rep.reservation_id
-    ORDER BY rep_count DESC LIMIT 1
-) sub ON rep.reservation_id = sub.reservation_id;
+    GROUP BY t.id
+    ORDER BY t.id
+    LIMIT 1) sub ON res.ticket_id = sub.id;
