@@ -116,7 +116,6 @@
 -- 9)
 	SELECT 
 		oc.county AS origin,
-		'Tehran' AS origin,
         CONCAT(dc.province, '  (', dc.county, ')') AS destination,
         COUNT(dc.county) AS "tripNO."
     FROM "ticket" t

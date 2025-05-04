@@ -9,6 +9,134 @@ import (
 	"context"
 )
 
+const getCityWithOldestUser = `-- name: GetCityWithOldestUser :many
+SELECT 
+    u.id, 
+    CONCAT(oc.province, '  (', oc.county, ')') AS origin
+FROM "user" u
+INNER JOIN "reservation" re ON u.id = re.user_id
+INNER JOIN "payment" pa ON pa.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+WHERE u.id = (SELECT u.id FROM "user" u 
+WHERE u.role = 'USER'
+ORDER BY u.created_at DESC 
+LIMIT 1) AND pa.status = 'COMPLETED'
+GROUP BY u.id, oc.province, oc.county
+`
+
+type GetCityWithOldestUserRow struct {
+	ID     int64       `json:"id"`
+	Origin interface{} `json:"origin"`
+}
+
+func (q *Queries) GetCityWithOldestUser(ctx context.Context) ([]GetCityWithOldestUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCityWithOldestUser)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCityWithOldestUserRow{}
+	for rows.Next() {
+		var i GetCityWithOldestUserRow
+		if err := rows.Scan(&i.ID, &i.Origin); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCountOfTicketFromTehran = `-- name: GetCountOfTicketFromTehran :many
+SELECT 
+    oc.county AS origin,
+    CONCAT(dc.province, '  (', dc.county, ')') AS destination,
+    COUNT(dc.county) AS "tripNO."
+FROM "ticket" t
+INNER JOIN "reservation" re ON t.id = re.ticket_id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE oc.county = 'Tehran'
+GROUP BY oc.county, dc.province, dc.county
+`
+
+type GetCountOfTicketFromTehranRow struct {
+	Origin      string      `json:"origin"`
+	Destination interface{} `json:"destination"`
+	TripNO      int64       `json:"tripNO."`
+}
+
+func (q *Queries) GetCountOfTicketFromTehran(ctx context.Context) ([]GetCountOfTicketFromTehranRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCountOfTicketFromTehran)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCountOfTicketFromTehranRow{}
+	for rows.Next() {
+		var i GetCountOfTicketFromTehranRow
+		if err := rows.Scan(&i.Origin, &i.Destination, &i.TripNO); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCountOfTicketVehicle = `-- name: GetCountOfTicketVehicle :many
+SELECT 
+    t.vehicle_type, 
+    COUNT(t.id) AS "NO." 
+FROM "ticket" t
+INNER JOIN "reservation" r ON r.ticket_id = t.id
+INNER JOIN "payment" p ON p.id = r.payment_id
+WHERE p.status = 'COMPLETED'
+GROUP BY t.vehicle_type
+ORDER BY "NO." DESC
+`
+
+type GetCountOfTicketVehicleRow struct {
+	VehicleType VehicleType `json:"vehicle_type"`
+	NO          int64       `json:"NO."`
+}
+
+func (q *Queries) GetCountOfTicketVehicle(ctx context.Context) ([]GetCountOfTicketVehicleRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCountOfTicketVehicle)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCountOfTicketVehicleRow{}
+	for rows.Next() {
+		var i GetCountOfTicketVehicleRow
+		if err := rows.Scan(&i.VehicleType, &i.NO); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getSumOfPaymentInDifferentMonth = `-- name: GetSumOfPaymentInDifferentMonth :many
 SELECT 
     u.id, 
@@ -59,6 +187,50 @@ func (q *Queries) GetSumOfPaymentInDifferentMonth(ctx context.Context) ([]GetSum
 	return items, nil
 }
 
+const getThreeUsersWithMostPurchaseInWeek = `-- name: GetThreeUsersWithMostPurchaseInWeek :many
+SELECT 
+u.id, 
+CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+COUNT(re.id) AS "NO."
+FROM "user" u
+INNER JOIN "profile" pro ON u.id = pro.user_id
+INNER JOIN "reservation" re ON u.id = re.user_id
+INNER JOIN "payment" pa ON pa.id = re.payment_id
+WHERE pa.status = 'COMPLETED' AND pa.created_at > NOW() - INTERVAL '7 days'
+GROUP BY u.id, pro.first_name, pro.last_name
+ORDER BY "NO." DESC
+LIMIT 3
+`
+
+type GetThreeUsersWithMostPurchaseInWeekRow struct {
+	ID       int64       `json:"id"`
+	FullName interface{} `json:"full_name"`
+	NO       int64       `json:"NO."`
+}
+
+func (q *Queries) GetThreeUsersWithMostPurchaseInWeek(ctx context.Context) ([]GetThreeUsersWithMostPurchaseInWeekRow, error) {
+	rows, err := q.db.QueryContext(ctx, getThreeUsersWithMostPurchaseInWeek)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetThreeUsersWithMostPurchaseInWeekRow{}
+	for rows.Next() {
+		var i GetThreeUsersWithMostPurchaseInWeekRow
+		if err := rows.Scan(&i.ID, &i.FullName, &i.NO); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserInfoWithNewTicket = `-- name: GetUserInfoWithNewTicket :one
 SELECT 
     u.id,
@@ -85,6 +257,58 @@ func (q *Queries) GetUserInfoWithNewTicket(ctx context.Context) (GetUserInfoWith
 	var i GetUserInfoWithNewTicketRow
 	err := row.Scan(&i.ID, &i.FullName, &i.CreatedAt)
 	return i, err
+}
+
+const getUserMoreThanAmountAvrage = `-- name: GetUserMoreThanAmountAvrage :many
+SELECT 
+    u.id, 
+    COALESCE(u.email, 'No Email') AS email, 
+    COALESCE(u.phone_number, 'No Phone') AS phone_number, 
+    SUM(p.amount) AS "total amount" FROM "user" u
+INNER JOIN "reservation" r ON u.id = r.user_id
+INNER JOIN "payment" p ON p.id = r.payment_id
+GROUP BY u.id, u.email, u.phone_number
+HAVING SUM(p.amount) > (SELECT AVG(p.amount)
+    FROM "user" u
+    INNER JOIN "reservation" re ON re.user_id = u.id
+    INNER JOIN "payment" p ON p.id = re.payment_id
+    WHERE p.status = 'COMPLETED'
+)
+`
+
+type GetUserMoreThanAmountAvrageRow struct {
+	ID          int64  `json:"id"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	TotalAmount int64  `json:"total amount"`
+}
+
+func (q *Queries) GetUserMoreThanAmountAvrage(ctx context.Context) ([]GetUserMoreThanAmountAvrageRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserMoreThanAmountAvrage)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserMoreThanAmountAvrageRow{}
+	for rows.Next() {
+		var i GetUserMoreThanAmountAvrageRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.PhoneNumber,
+			&i.TotalAmount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserWithOneTicketInCity = `-- name: GetUserWithOneTicketInCity :many
