@@ -39,4 +39,11 @@ dockerstart:
 
 dockerstop:
 	docker compose stop
-	
+
+sqlc:
+	sqlc generate
+
+test:
+	go test -v -cover -short ./...
+
+.PHONY: sqlc test	
