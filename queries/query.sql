@@ -179,7 +179,7 @@
 	INNER JOIN "ticket" t ON t.id = r.ticket_id
     WHERE pa.status = 'COMPLETED'
     GROUP BY u.id, pro.first_name, pro.last_name, t.vehicle_type
-    HAVING COUNT(r.ticket_id) > 1
+    HAVING COUNT(r.ticket_id) < 3
     ORDER BY u.id;
 
 -- 14)

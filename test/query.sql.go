@@ -9,6 +9,44 @@ import (
 	"context"
 )
 
+const getAdminName = `-- name: GetAdminName :many
+SELECT 
+    u.id,
+    CONCAT(pro.first_name, ' ', pro.last_name) AS full_name
+FROM "user" u
+INNER JOIN "profile" pro ON u.id = pro.user_id
+WHERE u.role = 'ADMIN'
+ORDER BY u.id
+`
+
+type GetAdminNameRow struct {
+	ID       int64       `json:"id"`
+	FullName interface{} `json:"full_name"`
+}
+
+func (q *Queries) GetAdminName(ctx context.Context) ([]GetAdminNameRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAdminName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAdminNameRow{}
+	for rows.Next() {
+		var i GetAdminNameRow
+		if err := rows.Scan(&i.ID, &i.FullName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCityWithOldestUser = `-- name: GetCityWithOldestUser :many
 SELECT 
     u.id, 
@@ -297,6 +335,109 @@ func (q *Queries) GetUserMoreThanAmountAvrage(ctx context.Context) ([]GetUserMor
 			&i.Email,
 			&i.PhoneNumber,
 			&i.TotalAmount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserWithLessThanTwoTicketVehicle = `-- name: GetUserWithLessThanTwoTicketVehicle :many
+SELECT 
+    u.id, 
+    CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+    t.vehicle_type,
+    COUNT(r.ticket_id) AS ticket_count
+FROM "user" u
+INNER JOIN "profile" pro ON u.id = pro.user_id
+INNER JOIN "reservation" r ON u.id = r.user_id
+INNER JOIN "payment" pa ON pa.id = r.payment_id
+INNER JOIN "ticket" t ON t.id = r.ticket_id
+WHERE pa.status = 'COMPLETED'
+GROUP BY u.id, pro.first_name, pro.last_name, t.vehicle_type
+HAVING COUNT(r.ticket_id) < 3
+ORDER BY u.id
+`
+
+type GetUserWithLessThanTwoTicketVehicleRow struct {
+	ID          int64       `json:"id"`
+	FullName    interface{} `json:"full_name"`
+	VehicleType VehicleType `json:"vehicle_type"`
+	TicketCount int64       `json:"ticket_count"`
+}
+
+func (q *Queries) GetUserWithLessThanTwoTicketVehicle(ctx context.Context) ([]GetUserWithLessThanTwoTicketVehicleRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserWithLessThanTwoTicketVehicle)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserWithLessThanTwoTicketVehicleRow{}
+	for rows.Next() {
+		var i GetUserWithLessThanTwoTicketVehicleRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FullName,
+			&i.VehicleType,
+			&i.TicketCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserWithMoreThanTwoTicket = `-- name: GetUserWithMoreThanTwoTicket :many
+SELECT 
+    u.id, 
+    CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+    u.role,
+    COUNT(r.ticket_id) AS ticket_count
+FROM "user" u
+INNER JOIN "profile" pro ON u.id = pro.user_id
+INNER JOIN "reservation" r ON u.id = r.user_id
+INNER JOIN "payment" pa ON pa.id = r.payment_id
+WHERE u.role != 'ADMIN' AND pa.status = 'COMPLETED'
+GROUP BY u.id, pro.first_name, pro.last_name, u.role
+HAVING COUNT(r.ticket_id) > 1
+ORDER BY u.id
+`
+
+type GetUserWithMoreThanTwoTicketRow struct {
+	ID          int64       `json:"id"`
+	FullName    interface{} `json:"full_name"`
+	Role        Role        `json:"role"`
+	TicketCount int64       `json:"ticket_count"`
+}
+
+func (q *Queries) GetUserWithMoreThanTwoTicket(ctx context.Context) ([]GetUserWithMoreThanTwoTicketRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserWithMoreThanTwoTicket)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserWithMoreThanTwoTicketRow{}
+	for rows.Next() {
+		var i GetUserWithMoreThanTwoTicketRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FullName,
+			&i.Role,
+			&i.TicketCount,
 		); err != nil {
 			return nil, err
 		}

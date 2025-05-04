@@ -141,3 +141,43 @@ WHERE u.role = 'USER'
 ORDER BY u.created_at DESC 
 LIMIT 1) AND pa.status = 'COMPLETED'
 GROUP BY u.id, oc.province, oc.county;
+
+-- name: GetAdminName :many
+SELECT 
+    u.id,
+    CONCAT(pro.first_name, ' ', pro.last_name) AS full_name
+FROM "user" u
+INNER JOIN "profile" pro ON u.id = pro.user_id
+WHERE u.role = 'ADMIN'
+ORDER BY u.id;
+
+-- name: GetUserWithMoreThanTwoTicket :many
+SELECT 
+    u.id, 
+    CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+    u.role,
+    COUNT(r.ticket_id) AS ticket_count
+FROM "user" u
+INNER JOIN "profile" pro ON u.id = pro.user_id
+INNER JOIN "reservation" r ON u.id = r.user_id
+INNER JOIN "payment" pa ON pa.id = r.payment_id
+WHERE u.role != 'ADMIN' AND pa.status = 'COMPLETED'
+GROUP BY u.id, pro.first_name, pro.last_name, u.role
+HAVING COUNT(r.ticket_id) > 1
+ORDER BY u.id;
+
+-- name: GetUserWithLessThanTwoTicketVehicle :many
+SELECT 
+    u.id, 
+    CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+    t.vehicle_type,
+    COUNT(r.ticket_id) AS ticket_count
+FROM "user" u
+INNER JOIN "profile" pro ON u.id = pro.user_id
+INNER JOIN "reservation" r ON u.id = r.user_id
+INNER JOIN "payment" pa ON pa.id = r.payment_id
+INNER JOIN "ticket" t ON t.id = r.ticket_id
+WHERE pa.status = 'COMPLETED'
+GROUP BY u.id, pro.first_name, pro.last_name, t.vehicle_type
+HAVING COUNT(r.ticket_id) < 3
+ORDER BY u.id;

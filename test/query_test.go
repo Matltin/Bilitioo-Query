@@ -108,5 +108,35 @@ func TestGetCityWithOldestUser(t *testing.T) {
 	}
 }
 
+func TestGetAdminName(t *testing.T) {
+	admins, err := testQueries.GetAdminName(context.Background())
+
+	require.NoError(t, err)
+	require.NotNil(t, admins)
+	require.Equal(t, len(admins), 3)
+	require.Equal(t, admins[0].FullName, "Ali Ahmadi")
+	require.Equal(t, admins[1].FullName, "Maryam Hosseini")
+	require.Equal(t, admins[2].FullName, "Reza Mohammadi")
+}
+
+func TestGetUserWithMoreThanTwoTicket(t *testing.T) {
+	users, err := testQueries.GetUserWithMoreThanTwoTicket(context.Background())
+
+	require.NoError(t, err)
+	require.NotNil(t, users)
+	require.Equal(t, len(users), 2)
+	for i := 0; i < len(users); i++ {
+		require.Greater(t, users[i].TicketCount, int64(0))
+	}
+}
+
+func TestGetUserWithLessThanTwoTicketVehicle(t *testing.T) {
+	users, err := testQueries.GetUserWithLessThanTwoTicketVehicle(context.Background())
+	
+	require.NoError(t, err)
+	require.NotNil(t, users)
+	require.Equal(t, len(users), 3)
+}
+
 
 
