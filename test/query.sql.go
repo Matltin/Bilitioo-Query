@@ -7,7 +7,49 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
+
+const changeUserWithMostCancle = `-- name: ChangeUserWithMostCancle :exec
+UPDATE "profile"
+SET last_name = 'Redington'
+WHERE user_id = (
+SELECT cr.user_id
+FROM "change_reservation" cr
+WHERE cr.from_status NOT IN ('CANCELED', 'CANCELED-BY-TIME')
+    AND cr.to_status = 'CANCELED'
+GROUP BY cr.user_id
+ORDER BY COUNT(cr.id) DESC
+LIMIT 1
+)
+`
+
+func (q *Queries) ChangeUserWithMostCancle(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, changeUserWithMostCancle)
+	return err
+}
+
+const deleteAllCancledTicket = `-- name: DeleteAllCancledTicket :exec
+DELETE FROM "reservation" re
+WHERE re.status IN ('CANCELED', 'CANCELED-BY-TIME')
+`
+
+func (q *Queries) DeleteAllCancledTicket(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteAllCancledTicket)
+	return err
+}
+
+const deleteRedingtonTicket = `-- name: DeleteRedingtonTicket :exec
+DELETE FROM "reservation" r
+WHERE r.user_id = (SELECT pro.user_id FROM "profile" pro
+WHERE pro.last_name = 'Redington'
+LIMIT 1) AND r.status IN ('CANCELED', 'CANCELED-BY-TIME')
+`
+
+func (q *Queries) DeleteRedingtonTicket(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteRedingtonTicket)
+	return err
+}
 
 const getAdminName = `-- name: GetAdminName :many
 SELECT 
@@ -45,6 +87,52 @@ func (q *Queries) GetAdminName(ctx context.Context) ([]GetAdminNameRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getAdminWithMostReject = `-- name: GetAdminWithMostReject :one
+ WITH canceled_changes AS (
+    SELECT 
+        cr.admin_id, 
+        CONCAT(pro.first_name, ' ', pro.last_name) AS full_name,
+        COUNT(cr.id) AS cancel_count
+    FROM change_reservation cr
+    INNER JOIN "profile" pro ON pro.user_id = cr.admin_id
+    WHERE cr.from_status NOT IN ('CANCELED', 'CANCELED-BY-TIME')
+        AND cr.to_status = 'CANCELED'
+    GROUP BY cr.admin_id, pro.first_name, pro.last_name
+    ),
+    total_canceled AS (
+    SELECT COUNT(*) AS total FROM change_reservation
+    WHERE from_status NOT IN ('CANCELED', 'CANCELED-BY-TIME')
+        AND to_status = 'CANCELED'
+    )
+    SELECT 
+    cc.admin_id,
+    cc.full_name,
+    cc.cancel_count AS "NO. of Cancellations",
+    ROUND((cc.cancel_count::decimal / tc.total) * 100, 2) AS "Cancellation Percentage"
+    FROM canceled_changes cc, total_canceled tc
+    ORDER BY cc.cancel_count DESC
+    LIMIT 1
+`
+
+type GetAdminWithMostRejectRow struct {
+	AdminID                sql.NullInt64 `json:"admin_id"`
+	FullName               interface{}   `json:"full_name"`
+	NOOfCancellations      int64         `json:"NO. of Cancellations"`
+	CancellationPercentage string        `json:"Cancellation Percentage"`
+}
+
+func (q *Queries) GetAdminWithMostReject(ctx context.Context) (GetAdminWithMostRejectRow, error) {
+	row := q.db.QueryRowContext(ctx, getAdminWithMostReject)
+	var i GetAdminWithMostRejectRow
+	err := row.Scan(
+		&i.AdminID,
+		&i.FullName,
+		&i.NOOfCancellations,
+		&i.CancellationPercentage,
+	)
+	return i, err
 }
 
 const getCityWithOldestUser = `-- name: GetCityWithOldestUser :many
@@ -175,6 +263,104 @@ func (q *Queries) GetCountOfTicketVehicle(ctx context.Context) ([]GetCountOfTick
 	return items, nil
 }
 
+const getReport = `-- name: GetReport :many
+ SELECT 
+    rep.id, rep.reservation_id, rep.user_id, rep.admin_id, rep.request_type, rep.request_text, rep.response_text, 
+    sub.rep_count
+FROM "report" rep 
+INNER JOIN (SELECT  
+        rep.reservation_id,
+        COUNT(rep.reservation_id) AS rep_count
+    FROM "reservation" re
+    INNER JOIN "report" rep ON rep.reservation_id = re.id
+    GROUP BY rep.user_id, rep.reservation_id
+    ORDER BY rep_count DESC LIMIT 1
+) sub ON rep.reservation_id = sub.reservation_id
+`
+
+type GetReportRow struct {
+	ID            int64       `json:"id"`
+	ReservationID int64       `json:"reservation_id"`
+	UserID        int64       `json:"user_id"`
+	AdminID       int64       `json:"admin_id"`
+	RequestType   RequestType `json:"request_type"`
+	RequestText   string      `json:"request_text"`
+	ResponseText  string      `json:"response_text"`
+	RepCount      int64       `json:"rep_count"`
+}
+
+func (q *Queries) GetReport(ctx context.Context) ([]GetReportRow, error) {
+	rows, err := q.db.QueryContext(ctx, getReport)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetReportRow{}
+	for rows.Next() {
+		var i GetReportRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.ReservationID,
+			&i.UserID,
+			&i.AdminID,
+			&i.RequestType,
+			&i.RequestText,
+			&i.ResponseText,
+			&i.RepCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSecondPopularTicketInfo = `-- name: GetSecondPopularTicketInfo :one
+SELECT 
+t.id, 
+t.vehicle_type, 
+CONCAT(oc.province, '  (', oc.county, ')') AS origin,
+CONCAT(dc.province, '  (', dc.county, ')') AS destination,
+COUNT(r.id) AS "NO." FROM "change_reservation" cr
+INNER JOIN "reservation" r ON cr.reservation_id = r.id
+INNER JOIN "ticket" t ON t.id = r.ticket_id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE cr.to_status = 'RESERVED'
+GROUP BY t.id, t.vehicle_type, oc.province, oc.county, dc.province, dc.county
+ORDER BY "NO."
+LIMIT 1
+OFFSET 1
+`
+
+type GetSecondPopularTicketInfoRow struct {
+	ID          int64       `json:"id"`
+	VehicleType VehicleType `json:"vehicle_type"`
+	Origin      interface{} `json:"origin"`
+	Destination interface{} `json:"destination"`
+	NO          int64       `json:"NO."`
+}
+
+func (q *Queries) GetSecondPopularTicketInfo(ctx context.Context) (GetSecondPopularTicketInfoRow, error) {
+	row := q.db.QueryRowContext(ctx, getSecondPopularTicketInfo)
+	var i GetSecondPopularTicketInfoRow
+	err := row.Scan(
+		&i.ID,
+		&i.VehicleType,
+		&i.Origin,
+		&i.Destination,
+		&i.NO,
+	)
+	return i, err
+}
+
 const getSumOfPaymentInDifferentMonth = `-- name: GetSumOfPaymentInDifferentMonth :many
 SELECT 
     u.id, 
@@ -269,6 +455,59 @@ func (q *Queries) GetThreeUsersWithMostPurchaseInWeek(ctx context.Context) ([]Ge
 	return items, nil
 }
 
+const getTicketInfoForToday = `-- name: GetTicketInfoForToday :many
+ SELECT 
+        u.id,
+        CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+        t.id AS "ticket id",
+        t.vehicle_type,
+        TO_CHAR(pa.created_at, 'YYYY-MM-DD HH24:MI:SS') AS issued
+    FROM "user" u
+    INNER JOIN "profile" pro ON u.id = pro.user_id
+    INNER JOIN "reservation" r ON u.id = r.user_id
+    INNER JOIN "ticket" t ON  t.id = r.ticket_id
+    INNER JOIN "payment" pa ON  pa.id = r.payment_id
+    WHERE pa.status = 'COMPLETED' AND pa.created_at >= date_trunc('day', now())
+    ORDER BY pa.created_at
+`
+
+type GetTicketInfoForTodayRow struct {
+	ID          int64       `json:"id"`
+	FullName    interface{} `json:"full_name"`
+	TicketID    int64       `json:"ticket id"`
+	VehicleType VehicleType `json:"vehicle_type"`
+	Issued      string      `json:"issued"`
+}
+
+func (q *Queries) GetTicketInfoForToday(ctx context.Context) ([]GetTicketInfoForTodayRow, error) {
+	rows, err := q.db.QueryContext(ctx, getTicketInfoForToday)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetTicketInfoForTodayRow{}
+	for rows.Next() {
+		var i GetTicketInfoForTodayRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FullName,
+			&i.TicketID,
+			&i.VehicleType,
+			&i.Issued,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserInfoWithNewTicket = `-- name: GetUserInfoWithNewTicket :one
 SELECT 
     u.id,
@@ -336,6 +575,54 @@ func (q *Queries) GetUserMoreThanAmountAvrage(ctx context.Context) ([]GetUserMor
 			&i.PhoneNumber,
 			&i.TotalAmount,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserWithAllVehicleRejected = `-- name: GetUserWithAllVehicleRejected :many
+SELECT 
+  u.id, 
+    COALESCE(u.email, 'No Email') AS email, 
+    COALESCE(u.phone_number, 'No Phone') AS phone_number
+FROM "user" u
+WHERE NOT EXISTS (
+    SELECT t.vehicle_type
+    FROM "ticket" t
+    WHERE t.vehicle_type IN ('BUS', 'AIRPLANE', 'TRAIN')
+    EXCEPT
+    SELECT t.vehicle_type
+    FROM "reservation" r
+    INNER JOIN "ticket" t ON r.ticket_id = t.id
+    INNER JOIN "payment" p ON r.payment_id = p.id
+    WHERE r.user_id = u.id AND p.status = 'COMPLETED'
+)
+`
+
+type GetUserWithAllVehicleRejectedRow struct {
+	ID          int64  `json:"id"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+}
+
+func (q *Queries) GetUserWithAllVehicleRejected(ctx context.Context) ([]GetUserWithAllVehicleRejectedRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserWithAllVehicleRejected)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserWithAllVehicleRejectedRow{}
+	for rows.Next() {
+		var i GetUserWithAllVehicleRejectedRow
+		if err := rows.Scan(&i.ID, &i.Email, &i.PhoneNumber); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -604,4 +891,36 @@ func (q *Queries) GetUsersWithNoTickets(ctx context.Context) ([]GetUsersWithNoTi
 		return nil, err
 	}
 	return items, nil
+}
+
+const upadateMahanAirTicketCost = `-- name: UpadateMahanAirTicketCost :exec
+UPDATE "ticket"
+SET amount = amount * 0.9
+WHERE vehicle_id IN (
+SELECT v.id FROM "vehicle" v
+INNER JOIN "company" c ON v.company_id = c.id
+WHERE c.name = 'Mahan Air'
+)
+`
+
+func (q *Queries) UpadateMahanAirTicketCost(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, upadateMahanAirTicketCost)
+	return err
+}
+
+const updateMahanAirPaymentCost = `-- name: UpdateMahanAirPaymentCost :exec
+UPDATE "payment"
+SET amount = amount * 0.9
+WHERE id IN (
+SELECT r.payment_id FROM "reservation" r
+INNER JOIN "ticket" t ON r.ticket_id = t.id
+INNER JOIN "vehicle" v ON t.vehicle_id = v.id
+INNER JOIN "company" c ON c.id = v.company_id
+WHERE c.name = 'Mahan Air'
+)
+`
+
+func (q *Queries) UpdateMahanAirPaymentCost(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, updateMahanAirPaymentCost)
+	return err
 }

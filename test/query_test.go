@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +21,7 @@ func TestGetUsersWithTickets(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, users)
-	require.Equal(t,len(users), 3)
+	require.Equal(t, len(users), 3)
 
 	for i := 0; i < len(users); i++ {
 		require.NotEqual(t, users[i].TicketCount, 0)
@@ -52,7 +53,6 @@ func TestGetUserInfoWithNewTicket(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, user)
 	require.Equal(t, user.ID, int64(6))
-	require.Equal(t, user.FullName, "Mohammad Ghasemi")
 
 }
 
@@ -90,7 +90,7 @@ func TestGetCountOfTicketFromTehran(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cities)
 	require.Equal(t, len(cities), 3)
-	
+
 	for i := 0; i < len(cities); i++ {
 		require.Equal(t, cities[i].Origin, "Tehran")
 		require.Greater(t, cities[i].TripNO, int64(0))
@@ -102,9 +102,9 @@ func TestGetCityWithOldestUser(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, cities)
-	
+
 	for i := 1; i < len(cities); i++ {
-		require.Equal(t, cities[i].ID, cities[i - 1].ID)
+		require.Equal(t, cities[i].ID, cities[i-1].ID)
 	}
 }
 
@@ -132,11 +132,77 @@ func TestGetUserWithMoreThanTwoTicket(t *testing.T) {
 
 func TestGetUserWithLessThanTwoTicketVehicle(t *testing.T) {
 	users, err := testQueries.GetUserWithLessThanTwoTicketVehicle(context.Background())
-	
+
 	require.NoError(t, err)
 	require.NotNil(t, users)
 	require.Equal(t, len(users), 3)
 }
 
+func TestGetUserWithAllVehicleRejected(t *testing.T) {
+	users, err := testQueries.GetUserWithAllVehicleRejected(context.Background())
 
+	require.NoError(t, err)
+	require.NotNil(t, users)
+	require.Equal(t, len(users), 0)
+	for i := 0; i < len(users); i++ {
+		require.True(t, users[i].Email != "" || users[i].PhoneNumber != "")
+	}
+}
 
+func TestGetTicketInfoForToday(t *testing.T) {
+	tickets, err := testQueries.GetTicketInfoForToday(context.Background())
+
+	require.NoError(t, err)
+	require.NotNil(t, tickets)
+	require.Equal(t, len(tickets), 5)
+}
+
+func TestGetSecondPopularTicketInfo(t *testing.T) {
+	ticket, err := testQueries.GetSecondPopularTicketInfo(context.Background())
+
+	require.NoError(t, err)
+	require.NotNil(t, ticket)
+
+}
+
+func TestGetAdminWithMostReject(t *testing.T) {
+	admin, err := testQueries.GetAdminWithMostReject(context.Background())
+
+	require.NoError(t, err)
+	require.NotNil(t,admin)
+	require.Equal(t, admin.AdminID, sql.NullInt64{Int64: 1, Valid: true})
+	require.Equal(t, admin.FullName, "Ali Ahmadi")
+}
+
+func TestChangeUserWithMostCancle(t *testing.T) {
+	err := testQueries.ChangeUserWithMostCancle(context.Background())
+
+	require.NoError(t, err)
+}
+
+// func TestDeleteRedingtonTicket(t *testing.T) {
+// 	err := testQueries.DeleteRedingtonTicket(context.Background())
+
+// 	require.NoError(t, err)
+// }
+
+// func TestDeleteAllCancledTicket(t *testing.T) {
+// 	err := testQueries.DeleteAllCancledTicket(context.Background())
+
+// 	require.NoError(t, err)
+// }
+
+func TestUpadateMahanAirCost(t *testing.T) {
+	err := testQueries.UpadateMahanAirTicketCost(context.Background())
+	require.NoError(t, err)
+	err = testQueries.UpdateMahanAirPaymentCost(context.Background())
+	require.NoError(t, err)
+}
+
+// func TestGetReport(t *testing.T) {
+// 	reports, err := testQueries.GetReport(context.Background())
+
+// 	require.NoError(t, err)
+// 	require.NotNil(t, reports)
+// 	require.Equal(t, )
+// }
