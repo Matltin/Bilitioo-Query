@@ -173,33 +173,32 @@
     ORDER BY pro.user_id;
 
 -- 14)
-SELECT 
-  u.id, 
-    COALESCE(u.email, 'No Email') AS email, 
-    COALESCE(u.phone_number, 'No Phone') AS phone_number
-FROM "user" u
-WHERE NOT EXISTS (
-    SELECT t.vehicle_type
-    FROM "ticket" t
-    WHERE t.vehicle_type IN ('BUS', 'AIRPLANE', 'TRAIN')
-    EXCEPT
-    SELECT t.vehicle_type
-    FROM "reservation" r
-    INNER JOIN "ticket" t ON r.ticket_id = t.id
-    INNER JOIN "payment" p ON r.payment_id = p.id
-    WHERE r.user_id = u.id AND p.status = 'COMPLETED'
-);
+    SELECT 
+        u.id, 
+        COALESCE(u.email, 'No Email') AS email, 
+        COALESCE(u.phone_number, 'No Phone') AS phone_number
+    FROM "user" u
+    WHERE NOT EXISTS (
+        SELECT t.vehicle_type
+        FROM "ticket" t
+        WHERE t.vehicle_type IN ('BUS', 'AIRPLANE', 'TRAIN')
+        EXCEPT
+        SELECT t.vehicle_type
+        FROM "reservation" r
+        INNER JOIN "ticket" t ON r.ticket_id = t.id
+        INNER JOIN "payment" p ON r.payment_id = p.id
+        WHERE r.user_id = u.id AND p.status = 'COMPLETED'
+    );
 
 -- 15)
     SELECT 
-        u.id,
+        pro.user_id,
         CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
         t.id AS "ticket id",
         t.vehicle_type,
         TO_CHAR(pa.created_at, 'YYYY-MM-DD HH24:MI:SS') AS issued
-    FROM "user" u
-    INNER JOIN "profile" pro ON u.id = pro.user_id
-    INNER JOIN "reservation" r ON u.id = r.user_id
+    FROM "profile" pro
+    INNER JOIN "reservation" r ON pro.user_id = r.user_id
     INNER JOIN "ticket" t ON  t.id = r.ticket_id
     INNER JOIN "payment" pa ON  pa.id = r.payment_id
     WHERE pa.status = 'COMPLETED' AND pa.created_at >= date_trunc('day', now())

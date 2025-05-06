@@ -460,14 +460,13 @@ func (q *Queries) GetThreeUsersWithMostPurchaseInWeek(ctx context.Context) ([]Ge
 
 const getTicketInfoForToday = `-- name: GetTicketInfoForToday :many
 SELECT 
-    u.id,
+    pro.user_id,
     CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
     t.id AS "ticket id",
     t.vehicle_type,
     TO_CHAR(pa.created_at, 'YYYY-MM-DD HH24:MI:SS') AS issued
-FROM "user" u
-INNER JOIN "profile" pro ON u.id = pro.user_id
-INNER JOIN "reservation" r ON u.id = r.user_id
+FROM "profile" pro
+INNER JOIN "reservation" r ON pro.user_id = r.user_id
 INNER JOIN "ticket" t ON  t.id = r.ticket_id
 INNER JOIN "payment" pa ON  pa.id = r.payment_id
 WHERE pa.status = 'COMPLETED' AND pa.created_at >= date_trunc('day', now())
@@ -475,7 +474,7 @@ ORDER BY pa.created_at
 `
 
 type GetTicketInfoForTodayRow struct {
-	ID          int64       `json:"id"`
+	UserID      int64       `json:"user_id"`
 	FullName    interface{} `json:"full_name"`
 	TicketID    int64       `json:"ticket id"`
 	VehicleType VehicleType `json:"vehicle_type"`
@@ -492,7 +491,7 @@ func (q *Queries) GetTicketInfoForToday(ctx context.Context) ([]GetTicketInfoFor
 	for rows.Next() {
 		var i GetTicketInfoForTodayRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.UserID,
 			&i.FullName,
 			&i.TicketID,
 			&i.VehicleType,

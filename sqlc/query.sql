@@ -192,14 +192,13 @@ WHERE NOT EXISTS (
 
 -- name: GetTicketInfoForToday :many
 SELECT 
-    u.id,
+    pro.user_id,
     CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
     t.id AS "ticket id",
     t.vehicle_type,
     TO_CHAR(pa.created_at, 'YYYY-MM-DD HH24:MI:SS') AS issued
-FROM "user" u
-INNER JOIN "profile" pro ON u.id = pro.user_id
-INNER JOIN "reservation" r ON u.id = r.user_id
+FROM "profile" pro
+INNER JOIN "reservation" r ON pro.user_id = r.user_id
 INNER JOIN "ticket" t ON  t.id = r.ticket_id
 INNER JOIN "payment" pa ON  pa.id = r.payment_id
 WHERE pa.status = 'COMPLETED' AND pa.created_at >= date_trunc('day', now())
