@@ -35,6 +35,7 @@ CREATE TABLE "vehicle" (
   "id" bigserial PRIMARY KEY,
   "company_id" bigint NOT NULL,
   "capacity" int NOT NULL,
+  "vehicle_type" vehicle_type NOT NULL,
   "feature" json NOT NULL
 );
 
@@ -42,7 +43,6 @@ CREATE TABLE "company" (
   "id" bigserial PRIMARY KEY,
   "name" text NOT NULL,
   "address" text NOT NULL,
-  "type" vehicle_type NOT NULL
 );
 
 CREATE TABLE "bus" (
