@@ -321,5 +321,5 @@ WHERE NOT EXISTS (
         INNER JOIN "reservation" re ON re.ticket_id = t.id
         INNER JOIN "report" rep ON rep.reservation_id = re.id
         GROUP BY t.id
-        ORDER BY t.id DESC
+        ORDER BY COUNT(rep.id) DESC
         LIMIT 1) sub ON res.ticket_id = sub.id;
