@@ -214,11 +214,12 @@ ORDER BY pa.created_at;
 
 -- name: GetSecondPopularTicketInfo :one
 SELECT 
-t.id, 
-t.vehicle_type, 
-CONCAT(oc.province, '  (', oc.county, ')') AS origin,
-CONCAT(dc.province, '  (', dc.county, ')') AS destination,
-COUNT(r.id) AS "NO." FROM "change_reservation" cr
+    t.id, 
+    t.vehicle_type, 
+    CONCAT(oc.province, '  (', oc.county, ')') AS origin,
+    CONCAT(dc.province, '  (', dc.county, ')') AS destination,
+    COUNT(r.id) AS "NO." 
+FROM "change_reservation" cr
 INNER JOIN "reservation" r ON cr.reservation_id = r.id
 INNER JOIN "ticket" t ON t.id = r.ticket_id
 INNER JOIN "route" ro ON t.route_id = ro.id
@@ -226,7 +227,7 @@ INNER JOIN "city" oc ON oc.id = ro.origin_city_id
 INNER JOIN "city" dc ON dc.id = ro.destination_city_id
 WHERE cr.to_status = 'RESERVED'
 GROUP BY t.id, t.vehicle_type, oc.province, oc.county, dc.province, dc.county
-ORDER BY "NO."
+ORDER BY "NO." DESC
 LIMIT 1
 OFFSET 1;
 
