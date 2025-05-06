@@ -144,7 +144,6 @@ Table company {
   id bigserial [pk]
   name text [not null]
   address text [not null]
-  type vehicle_type [not null]
 }
 
 Table vehicle {
