@@ -281,7 +281,7 @@ INNER JOIN (
     INNER JOIN "reservation" re ON re.ticket_id = t.id
     INNER JOIN "report" rep ON rep.reservation_id = re.id
     GROUP BY t.id
-    ORDER BY t.id DESC
+    ORDER BY COUNT(rep.id) DESC
     LIMIT 1) sub ON res.ticket_id = sub.id
 `
 
@@ -742,24 +742,23 @@ func (q *Queries) GetUserWithMoreThanTwoTicket(ctx context.Context) ([]GetUserWi
 
 const getUserWithOneTicketInCity = `-- name: GetUserWithOneTicketInCity :many
 SELECT 
-    u.id,
+    pro.user_id,
     CONCAT(pro.first_name, ' ', pro.last_name) AS full_name,
     CONCAT(dc.province, '  (', dc.county, ')') AS destination,
     COUNT(dc.county) AS "tripNO."
-FROM "user" u
-INNER JOIN "profile" pro ON u.id = pro.user_id
-INNER JOIN "reservation" re ON u.id = re.user_id
+FROM "profile" pro
+INNER JOIN "reservation" re ON pro.user_id = re.user_id
 INNER JOIN "ticket" t ON re.ticket_id = t.id
 INNER JOIN "route" ro ON t.route_id = ro.id
 INNER JOIN "city" oc ON oc.id = ro.origin_city_id
 INNER JOIN "city" dc ON dc.id = ro.destination_city_id
-GROUP BY u.id, pro.first_name, pro.last_name, dc.county, dc.province
+GROUP BY pro.user_id, pro.first_name, pro.last_name, dc.county, dc.province
 HAVING COUNT(dc.county) = 1
-ORDER BY u.id
+ORDER BY pro.user_id
 `
 
 type GetUserWithOneTicketInCityRow struct {
-	ID          int64       `json:"id"`
+	UserID      int64       `json:"user_id"`
 	FullName    interface{} `json:"full_name"`
 	Destination interface{} `json:"destination"`
 	TripNO      int64       `json:"tripNO."`
@@ -775,7 +774,7 @@ func (q *Queries) GetUserWithOneTicketInCity(ctx context.Context) ([]GetUserWith
 	for rows.Next() {
 		var i GetUserWithOneTicketInCityRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.UserID,
 			&i.FullName,
 			&i.Destination,
 			&i.TripNO,
@@ -847,23 +846,18 @@ func (q *Queries) GetUserWithTickets(ctx context.Context) ([]GetUserWithTicketsR
 const getUsersWithNoTickets = `-- name: GetUsersWithNoTickets :many
 SELECT 
     u.id, 
-    CONCAT(p.first_name, ' ', p.last_name) AS full_name, 
-    u.role,
-    COUNT(r.ticket_id) AS ticket_count
+    CONCAT(p.first_name, ' ', p.last_name) AS full_name
 FROM "user" u
 LEFT JOIN "reservation" r ON u.id = r.user_id
-JOIN "profile" p ON u.id = p.user_id
-WHERE u.role != 'ADMIN'
-GROUP BY u.id, p.first_name, p.last_name, u.role, r.status
-HAVING COUNT(r.ticket_id) = 0
+INNER JOIN "profile" p ON u.id = p.user_id
+WHERE u.role != 'ADMIN' AND r.id IS NULL
+GROUP BY u.id, p.first_name, p.last_name
 ORDER BY u.id
 `
 
 type GetUsersWithNoTicketsRow struct {
-	ID          int64       `json:"id"`
-	FullName    interface{} `json:"full_name"`
-	Role        Role        `json:"role"`
-	TicketCount int64       `json:"ticket_count"`
+	ID       int64       `json:"id"`
+	FullName interface{} `json:"full_name"`
 }
 
 func (q *Queries) GetUsersWithNoTickets(ctx context.Context) ([]GetUsersWithNoTicketsRow, error) {
@@ -875,12 +869,7 @@ func (q *Queries) GetUsersWithNoTickets(ctx context.Context) ([]GetUsersWithNoTi
 	items := []GetUsersWithNoTicketsRow{}
 	for rows.Next() {
 		var i GetUsersWithNoTicketsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.FullName,
-			&i.Role,
-			&i.TicketCount,
-		); err != nil {
+		if err := rows.Scan(&i.ID, &i.FullName); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
