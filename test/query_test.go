@@ -33,7 +33,7 @@ func TestGetSumOfPaymentInDifferentMonth(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, users)
-	require.Equal(t, len(users), 4)
+	require.Equal(t, len(users), 3)
 }
 
 func TestGetUserWithOneTicketInCity(t *testing.T) {

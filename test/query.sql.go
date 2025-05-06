@@ -100,20 +100,20 @@ const getAdminWithMostReject = `-- name: GetAdminWithMostReject :one
     WHERE cr.from_status NOT IN ('CANCELED', 'CANCELED-BY-TIME')
         AND cr.to_status = 'CANCELED'
     GROUP BY cr.admin_id, pro.first_name, pro.last_name
-    ),
-    total_canceled AS (
+),
+total_canceled AS (
     SELECT COUNT(*) AS total FROM change_reservation
     WHERE from_status NOT IN ('CANCELED', 'CANCELED-BY-TIME')
         AND to_status = 'CANCELED'
-    )
-    SELECT 
-    cc.admin_id,
-    cc.full_name,
-    cc.cancel_count AS "NO. of Cancellations",
-    ROUND((cc.cancel_count::decimal / tc.total) * 100, 2) AS "Cancellation Percentage"
-    FROM canceled_changes cc, total_canceled tc
-    ORDER BY cc.cancel_count DESC
-    LIMIT 1
+)
+SELECT 
+cc.admin_id,
+cc.full_name,
+cc.cancel_count AS "NO. of Cancellations",
+ROUND((cc.cancel_count::decimal / tc.total) * 100, 2) AS "Cancellation Percentage"
+FROM canceled_changes cc, total_canceled tc
+ORDER BY cc.cancel_count DESC
+LIMIT 1
 `
 
 type GetAdminWithMostRejectRow struct {
@@ -459,19 +459,19 @@ func (q *Queries) GetThreeUsersWithMostPurchaseInWeek(ctx context.Context) ([]Ge
 }
 
 const getTicketInfoForToday = `-- name: GetTicketInfoForToday :many
- SELECT 
-        u.id,
-        CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
-        t.id AS "ticket id",
-        t.vehicle_type,
-        TO_CHAR(pa.created_at, 'YYYY-MM-DD HH24:MI:SS') AS issued
-    FROM "user" u
-    INNER JOIN "profile" pro ON u.id = pro.user_id
-    INNER JOIN "reservation" r ON u.id = r.user_id
-    INNER JOIN "ticket" t ON  t.id = r.ticket_id
-    INNER JOIN "payment" pa ON  pa.id = r.payment_id
-    WHERE pa.status = 'COMPLETED' AND pa.created_at >= date_trunc('day', now())
-    ORDER BY pa.created_at
+SELECT 
+    u.id,
+    CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+    t.id AS "ticket id",
+    t.vehicle_type,
+    TO_CHAR(pa.created_at, 'YYYY-MM-DD HH24:MI:SS') AS issued
+FROM "user" u
+INNER JOIN "profile" pro ON u.id = pro.user_id
+INNER JOIN "reservation" r ON u.id = r.user_id
+INNER JOIN "ticket" t ON  t.id = r.ticket_id
+INNER JOIN "payment" pa ON  pa.id = r.payment_id
+WHERE pa.status = 'COMPLETED' AND pa.created_at >= date_trunc('day', now())
+ORDER BY pa.created_at
 `
 
 type GetTicketInfoForTodayRow struct {
