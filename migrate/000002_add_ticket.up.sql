@@ -42,7 +42,7 @@ CREATE TABLE "vehicle" (
 CREATE TABLE "company" (
   "id" bigserial PRIMARY KEY,
   "name" text NOT NULL,
-  "address" text NOT NULL,
+  "address" text NOT NULL
 );
 
 CREATE TABLE "bus" (
