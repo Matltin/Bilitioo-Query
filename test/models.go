@@ -523,10 +523,9 @@ type City struct {
 }
 
 type Company struct {
-	ID      int64       `json:"id"`
-	Name    string      `json:"name"`
-	Address string      `json:"address"`
-	Type    VehicleType `json:"type"`
+	ID      int64  `json:"id"`
+	Name    string `json:"name"`
+	Address string `json:"address"`
 }
 
 type NotificationLog struct {
@@ -673,8 +672,9 @@ type UserActivity struct {
 }
 
 type Vehicle struct {
-	ID        int64           `json:"id"`
-	CompanyID int64           `json:"company_id"`
-	Capacity  int32           `json:"capacity"`
-	Feature   json.RawMessage `json:"feature"`
+	ID          int64           `json:"id"`
+	CompanyID   int64           `json:"company_id"`
+	Capacity    int32           `json:"capacity"`
+	VehicleType VehicleType     `json:"vehicle_type"`
+	Feature     json.RawMessage `json:"feature"`
 }

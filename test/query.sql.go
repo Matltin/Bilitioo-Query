@@ -548,10 +548,7 @@ SELECT
 INNER JOIN "reservation" r ON u.id = r.user_id
 INNER JOIN "payment" p ON p.id = r.payment_id
 GROUP BY u.id, u.email, u.phone_number
-HAVING SUM(p.amount) > (SELECT AVG(p.amount)
-    FROM "user" u
-    INNER JOIN "reservation" re ON re.user_id = u.id
-    INNER JOIN "payment" p ON p.id = re.payment_id
+HAVING SUM(p.amount) > (SELECT AVG(p.amount) FROM "payment" p
     WHERE p.status = 'COMPLETED'
 )
 `
