@@ -1,0 +1,310 @@
+Project Bilitioo_Query {
+    database_type: 'PostgreSQL'
+}
+
+Table user {
+  id bigserial [pk]
+  email varchar 
+  phone_number varchar 
+  hashed_password varchar 
+  password_change_at timestamptz [not null, default: `now()`]
+  role role [not null, default: "USER"]
+  status user_status [not null, default: "ACTIVE"]
+  phone_verified bool [not null, default: false]
+  email_verified bool [not null, default: false]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    email
+    phone_number
+  }
+}
+
+Table profile {
+  id bigserial [pk]
+  user_id bigint [not null, unique, ref: - user.id] 
+  pic_dir varchar 
+  first_name varchar 
+  last_name varchar 
+  city_id bigint [ref: > city.id]
+  national_code varchar 
+
+  indexes {
+    user_id
+  }
+}
+
+Table report {
+  id bigserial [pk]
+  reservation_id bigint [not null, ref: > reservation.id]
+  user_id bigint [not null, ref: > user.id]
+  admin_id bigint [not null, ref: > user.id]
+  request_type request_type [not null, default: "ETC."] 
+  request_text text [not null]
+  response_text text [not null]
+
+  indexes {
+    user_id
+    admin_id
+    (user_id, admin_id)
+  }
+}
+
+Table reservation {
+  id bigserial [pk]
+  user_id bigint [not null, ref: > user.id]
+  ticket_id bigint [not null, ref: > ticket.id]
+  payment_id bigint [ref: > payment.id]
+  status ticket_status [not null, default: "RESERVING"]
+  duration_time interval [not null, default: '10 minutes']
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    user_id
+    ticket_id
+    (user_id, ticket_id)
+  }
+}
+
+Table payment {
+  id bigserial [pk]
+  from_account varchar [not null]
+  to_account varchar [not null]
+  amount bigint [not null]
+  type payment_type [not null]
+  status payment_status [not null, default: "PENDING"]
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table ticket {
+  id bigserial [pk]
+  vehicle_id bigint [not null, ref: > vehicle.id]
+  seat_id bigint [not null, ref: > seat.id]
+  vehicle_type vehicle_type [not null]
+  route_id bigint [not null, ref: > route.id]
+  amount bigint [not null]
+  departure_time timestamptz [not null]
+  arrival_time timestamptz [not null]
+  count_stand int [not null, default: 0]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    route_id
+    departure_time
+    (route_id, departure_time, vehicle_id)
+  }
+}
+
+Table change_reservation {
+  id bigserial [pk]
+  reservation_id bigint [not null, ref: - reservation.id]
+  admin_id bigint [ref: > user.id]
+  user_id bigint [not null, ref: > user.id]
+  from_status ticket_status [not null]
+  to_status ticket_status [not null]
+}
+
+Table route {
+  id bigserial [pk]
+  origin_city_id bigint [not null, ref: - city.id]
+  destination_city_id bigint [not null, ref: - city.id]
+  origin_terminal_id bigint [ref: - terminal.id]
+  destination_terminal_id bigint [ref: - terminal.id]
+  distance int [not null]
+
+  indexes {
+    origin_city_id
+    destination_city_id
+    origin_terminal_id
+    (origin_city_id, destination_city_id)
+    destination_terminal_id
+    (origin_terminal_id, destination_terminal_id)
+  }
+}
+
+Table city {
+  id bigserial [pk]
+  province varchar [not null]
+  county varchar [not null]
+
+  indexes {
+    province
+    county
+    (province, county)
+  }
+}
+
+Table terminal {
+  id bigserial [pk]
+  name text [not null]
+  address text [not null]
+}
+
+Table company {
+  id bigserial [pk]
+  name text [not null]
+  address text [not null]
+  type vehicle_type [not null]
+}
+
+Table vehicle {
+  id bigserial [pk]
+  company_id bigint [not null, ref: > company.id]
+  capacity int [not null]
+  vehicle_type vehicle_type [not null]
+  feature json [not null]
+
+  indexes {
+    company_id
+  }
+}
+
+Table bus {
+  vehicle_id bigint [not null, ref: > vehicle.id]
+  VIP boolean [not null, default: false]
+  bed_chair boolean [not null, default: false]
+}
+
+Table train {
+  vehicle_id bigint [not null, ref: > vehicle.id]
+  rank int [not null, default: 3]
+  have_compartment boolean [not null, default: false] 
+}
+
+Table airplane {
+  vehicle_id bigint [not null, ref: > vehicle.id]
+  flight_class flight_class [not null]
+  name varchar [not null]
+}
+
+Table seat {
+  id bigserial [pk]
+  vehicle_id bigint [not null, ref: > vehicle.id]
+  vehicle_type vehicle_type [not null]
+  seat_number varchar [not null]
+  is_available boolean [not null, default: true]
+
+  indexes {
+    vehicle_id
+  }
+}
+
+Table bus_seat {
+  seat_id bigint [not null, ref: > seat.id]
+}
+
+Table train_seat {
+  seat_id bigint [not null, ref: - seat.id]
+  salon int [not null]
+  have_compartment boolean [not null, default: false] 
+  cuope_number int
+}
+
+Table airplane_seat {
+  seat_id bigint [not null, ref: - seat.id]
+}
+
+Table penalty {
+  id bigserial [pk]
+  vehicle_id bigint [not null, ref: < vehicle.id]
+  penalty_text text [not null]
+}
+
+Table user_activity {
+  id bigserial [pk]
+  user_id bigint [not null, ref: > user.id]
+  route_id bigint [not null, ref: > route.id]
+  vehicle_type vehicle_type [not null]
+  status activity_status [not null, default: "PENDING"]
+  duration_time interval [not null, default: '10 minutes']
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table notification_log {
+  id bigserial [pk]
+  user_id bigint [not null, ref: > user.id]
+  send_email_sms_id bigint [not null, ref: > send_email_sms.id]
+  message_text text [not null]
+  user_activity_id bigint [not null, ref: - user_activity.id]
+}
+
+Table send_email_sms {
+  id bigserial [pk]
+  // TODO: have enum for message_type
+  message_type varchar [not null] 
+  sent_at timestamptz [not null, default: `now()`]
+  status notification_log_status [not null, default: "SENT"] 
+}
+
+Table send_verification_code {
+  id bigserial [pk]
+  user_id bigint [not null, ref: > user.id]
+  send_email_sms_id bigint [not null, ref: > send_email_sms.id]
+  token varchar [not null]
+  duration_time interval [not null, default: '10 minutes']
+  created_at timestamptz [not null, default: `now()`]
+}
+
+// Enum 
+Enum role {
+  "ADMIN"
+  "USER"
+}
+
+Enum user_status {
+  "ACTIVE"
+  "NON-ACTIVE"
+}
+
+Enum payment_type {
+  "CASH"
+  "CREDIT_CARD"
+  "WALLET"
+  "BANK_TRANSFER"
+  "CRYPTO"
+}
+
+Enum ticket_status {
+  "RESERVED"
+  "RESERVING"
+  "CANCELED"
+  "CANCELED-BY-TIME"
+}
+
+Enum payment_status {
+  "PENDING"
+  "COMPLETED"
+  "FAILED"
+  "REFUNDED"
+}
+
+Enum vehicle_type {
+  "BUS"
+  "TRAIN"
+  "AIRPLANE"
+}
+
+Enum flight_class {
+  "ECONOMY"
+  "PREMIUM-ECONOMY"
+  "BUSINESS"
+  "FIRST"
+}
+
+Enum activity_status {
+  "PENDING"
+  "REMINDER-SENT"
+  "PURCHASED"
+}
+
+Enum notification_log_status {
+  "SENT"
+  "FAILED"
+}
+
+Enum request_type {
+  "PAYMENT-ISSUE"
+  "TRAVEL-DELAY"
+  "UNEXPECTED-RESERVED"
+  "ETC." 
+}
