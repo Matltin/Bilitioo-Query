@@ -900,7 +900,10 @@ SET amount = amount * 0.9
 WHERE vehicle_id IN (
 SELECT v.id FROM "vehicle" v
 INNER JOIN "company" c ON v.company_id = c.id
-WHERE c.name = 'Mahan Air'
+INNER JOIN "ticket" t ON t.vehicle_id = v.id
+INNER JOIN "reservation" re ON re.ticket_id = t.id
+INNER JOIN "payment" p ON p.id = re.payment_id
+WHERE c.name = 'Iran Peyma' AND p.created_at > date_trunc('day', NOW() - INTERVAL '1 day')
 )
 `
 
@@ -917,7 +920,8 @@ SELECT r.payment_id FROM "reservation" r
 INNER JOIN "ticket" t ON r.ticket_id = t.id
 INNER JOIN "vehicle" v ON t.vehicle_id = v.id
 INNER JOIN "company" c ON c.id = v.company_id
-WHERE c.name = 'Mahan Air'
+INNER JOIN "payment" p ON p.id = r.payment_id
+WHERE c.name = 'Iran Peyma' AND p.created_at > date_trunc('day', NOW() - INTERVAL '1 day')
 )
 `
 
