@@ -142,9 +142,11 @@
             CONCAT(dc.province, '  (', dc.county, ')') ILIKE CONCAT('%', inp, '%') OR
             tr.rank::VARCHAR ILIKE CONCAT('%', inp, '%') OR
             (
-                'vip' ILIKE CONCAT('%', inp, '%') 
-            ) OR (
-                'notvip' ILIKE CONCAT('%', inp, '%')
+            b."VIP" IS NOT NULL AND 
+            (
+                (b."VIP" = true AND 'vip' ILIKE CONCAT('%', inp, '%')) OR
+                (b."VIP" = false AND 'not vip' ILIKE CONCAT('%', inp, '%'))
+            )
             ) OR
             ai.flight_class::VARCHAR ILIKE CONCAT('%', inp, '%');
     END;
