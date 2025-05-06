@@ -417,21 +417,20 @@ func (q *Queries) GetSumOfPaymentInDifferentMonth(ctx context.Context) ([]GetSum
 
 const getThreeUsersWithMostPurchaseInWeek = `-- name: GetThreeUsersWithMostPurchaseInWeek :many
 SELECT 
-u.id, 
-CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
-COUNT(re.id) AS "NO."
-FROM "user" u
-INNER JOIN "profile" pro ON u.id = pro.user_id
-INNER JOIN "reservation" re ON u.id = re.user_id
+    pro.user_id, 
+    CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
+    COUNT(re.id) AS "NO."
+FROM "profile" pro
+INNER JOIN "reservation" re ON pro.user_id = re.user_id
 INNER JOIN "payment" pa ON pa.id = re.payment_id
 WHERE pa.status = 'COMPLETED' AND pa.created_at > NOW() - INTERVAL '7 days'
-GROUP BY u.id, pro.first_name, pro.last_name
+GROUP BY pro.user_id, pro.first_name, pro.last_name
 ORDER BY "NO." DESC
 LIMIT 3
 `
 
 type GetThreeUsersWithMostPurchaseInWeekRow struct {
-	ID       int64       `json:"id"`
+	UserID   int64       `json:"user_id"`
 	FullName interface{} `json:"full_name"`
 	NO       int64       `json:"NO."`
 }
@@ -445,7 +444,7 @@ func (q *Queries) GetThreeUsersWithMostPurchaseInWeek(ctx context.Context) ([]Ge
 	items := []GetThreeUsersWithMostPurchaseInWeekRow{}
 	for rows.Next() {
 		var i GetThreeUsersWithMostPurchaseInWeekRow
-		if err := rows.Scan(&i.ID, &i.FullName, &i.NO); err != nil {
+		if err := rows.Scan(&i.UserID, &i.FullName, &i.NO); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -514,12 +513,11 @@ func (q *Queries) GetTicketInfoForToday(ctx context.Context) ([]GetTicketInfoFor
 
 const getUserInfoWithNewTicket = `-- name: GetUserInfoWithNewTicket :one
 SELECT 
-    u.id,
+    pro.user_id,
     CONCAT(pro.first_name, ' ', pro.last_name) AS full_name,
     TO_CHAR(pa.created_at, 'YYYY-MM-DD	HH24:MI:SS') AS "created at"
-FROM "user" u
-INNER JOIN "profile" pro ON u.id = pro.user_id
-INNER JOIN "reservation" re ON u.id = re.user_id
+FROM "profile" pro
+INNER JOIN "reservation" re ON pro.user_id = re.user_id
 INNER JOIN "ticket" t ON re.ticket_id = t.id
 INNER JOIN "payment" pa ON pa.id = re.payment_id
 WHERE pa.status = 'COMPLETED'
@@ -528,7 +526,7 @@ LIMIT 1
 `
 
 type GetUserInfoWithNewTicketRow struct {
-	ID        int64       `json:"id"`
+	UserID    int64       `json:"user_id"`
 	FullName  interface{} `json:"full_name"`
 	CreatedAt string      `json:"created at"`
 }
@@ -536,7 +534,7 @@ type GetUserInfoWithNewTicketRow struct {
 func (q *Queries) GetUserInfoWithNewTicket(ctx context.Context) (GetUserInfoWithNewTicketRow, error) {
 	row := q.db.QueryRowContext(ctx, getUserInfoWithNewTicket)
 	var i GetUserInfoWithNewTicketRow
-	err := row.Scan(&i.ID, &i.FullName, &i.CreatedAt)
+	err := row.Scan(&i.UserID, &i.FullName, &i.CreatedAt)
 	return i, err
 }
 
@@ -639,23 +637,22 @@ func (q *Queries) GetUserWithAllVehicleRejected(ctx context.Context) ([]GetUserW
 
 const getUserWithLessThanTwoTicketVehicle = `-- name: GetUserWithLessThanTwoTicketVehicle :many
 SELECT 
-    u.id, 
+    pro.user_id, 
     CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
     t.vehicle_type,
     COUNT(r.ticket_id) AS ticket_count
-FROM "user" u
-INNER JOIN "profile" pro ON u.id = pro.user_id
-INNER JOIN "reservation" r ON u.id = r.user_id
+FROM "profile" pro
+INNER JOIN "reservation" r ON pro.user_id = r.user_id
 INNER JOIN "payment" pa ON pa.id = r.payment_id
 INNER JOIN "ticket" t ON t.id = r.ticket_id
 WHERE pa.status = 'COMPLETED'
-GROUP BY u.id, pro.first_name, pro.last_name, t.vehicle_type
+GROUP BY pro.user_id, pro.first_name, pro.last_name, t.vehicle_type
 HAVING COUNT(r.ticket_id) < 3
-ORDER BY u.id
+ORDER BY pro.user_id
 `
 
 type GetUserWithLessThanTwoTicketVehicleRow struct {
-	ID          int64       `json:"id"`
+	UserID      int64       `json:"user_id"`
 	FullName    interface{} `json:"full_name"`
 	VehicleType VehicleType `json:"vehicle_type"`
 	TicketCount int64       `json:"ticket_count"`
@@ -671,7 +668,7 @@ func (q *Queries) GetUserWithLessThanTwoTicketVehicle(ctx context.Context) ([]Ge
 	for rows.Next() {
 		var i GetUserWithLessThanTwoTicketVehicleRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.UserID,
 			&i.FullName,
 			&i.VehicleType,
 			&i.TicketCount,

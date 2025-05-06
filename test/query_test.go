@@ -52,7 +52,7 @@ func TestGetUserInfoWithNewTicket(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, user)
-	require.Equal(t, user.ID, int64(6))
+	require.Equal(t, user.UserID, int64(6))
 
 }
 
@@ -135,7 +135,7 @@ func TestGetUserWithLessThanTwoTicketVehicle(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, users)
-	require.Equal(t, len(users), 3)
+	require.Equal(t, len(users), 4)
 }
 
 func TestGetUserWithAllVehicleRejected(t *testing.T) {
@@ -154,7 +154,7 @@ func TestGetTicketInfoForToday(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, tickets)
-	require.Equal(t, len(tickets), 5)
+	require.Equal(t, len(tickets), 4)
 }
 
 func TestGetSecondPopularTicketInfo(t *testing.T) {

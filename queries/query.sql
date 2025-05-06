@@ -56,12 +56,11 @@
 
 -- 5)
     SELECT 
-        u.id,
+        pro.user_id,
         CONCAT(pro.first_name, ' ', pro.last_name) AS full_name,
         TO_CHAR(pa.created_at, 'YYYY-MM-DD	HH24:MI:SS') AS "created at"
-    FROM "user" u
-    INNER JOIN "profile" pro ON u.id = pro.user_id
-    INNER JOIN "reservation" re ON u.id = re.user_id
+    FROM "profile" pro
+    INNER JOIN "reservation" re ON pro.user_id = re.user_id
     INNER JOIN "ticket" t ON re.ticket_id = t.id
     INNER JOIN "payment" pa ON pa.id = re.payment_id
     WHERE pa.status = 'COMPLETED'
@@ -94,15 +93,14 @@
 
 -- 8)
     SELECT 
-        u.id, 
+        pro.user_id, 
         CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
         COUNT(re.id) AS "NO."
-    FROM "user" u
-    INNER JOIN "profile" pro ON u.id = pro.user_id
-    INNER JOIN "reservation" re ON u.id = re.user_id
+    FROM "profile" pro
+    INNER JOIN "reservation" re ON pro.user_id = re.user_id
     INNER JOIN "payment" pa ON pa.id = re.payment_id
     WHERE pa.status = 'COMPLETED' AND pa.created_at > NOW() - INTERVAL '7 days'
-    GROUP BY u.id, pro.first_name, pro.last_name
+    GROUP BY pro.user_id, pro.first_name, pro.last_name
     ORDER BY "NO." DESC
     LIMIT 3;
 
@@ -161,19 +159,18 @@
 
 -- 13)
 	SELECT 
-        u.id, 
+        pro.user_id, 
         CONCAT(pro.first_name, ' ', pro.last_name) AS full_name, 
         t.vehicle_type,
         COUNT(r.ticket_id) AS ticket_count
-    FROM "user" u
-	INNER JOIN "profile" pro ON u.id = pro.user_id
-    INNER JOIN "reservation" r ON u.id = r.user_id
+    FROM "profile" pro
+    INNER JOIN "reservation" r ON pro.user_id = r.user_id
 	INNER JOIN "payment" pa ON pa.id = r.payment_id
 	INNER JOIN "ticket" t ON t.id = r.ticket_id
     WHERE pa.status = 'COMPLETED'
-    GROUP BY u.id, pro.first_name, pro.last_name, t.vehicle_type
+    GROUP BY pro.user_id, pro.first_name, pro.last_name, t.vehicle_type
     HAVING COUNT(r.ticket_id) < 3
-    ORDER BY u.id;
+    ORDER BY pro.user_id;
 
 -- 14)
 SELECT 
