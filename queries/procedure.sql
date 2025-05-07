@@ -264,6 +264,7 @@
                 COUNT(*) AS rep_count
             FROM "user" u
             INNER JOIN "report" r ON r.user_id = u.id
+            WHERE r.request_type::VARCHAR = inp
             GROUP BY u.id
         )
         SELECT 
