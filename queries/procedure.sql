@@ -82,7 +82,7 @@
         SELECT 
             t.id,
             CONCAT(oc.province, '  (', oc.county, ')')::VARCHAR AS origin_city,
-      inp_city AS destination_city,
+            inp_city AS destination_city,
             t.vehicle_type::VARCHAR
         FROM "ticket" t
         INNER JOIN "route" ro ON ro.id = t.route_id
@@ -106,7 +106,7 @@
         full_name VARCHAR,
         origin_city VARCHAR,
         destination_city VARCHAR,
-    extra_info VARCHAR
+        extra_info VARCHAR
     )
     LANGUAGE plpgsql
     AS $$
@@ -119,13 +119,13 @@
             CONCAT(p.first_name, ' ', p.last_name)::VARCHAR AS full_name, 
             CONCAT(oc.province, '  (', oc.county, ')')::VARCHAR AS origin_city,
             CONCAT(dc.province, '  (', dc.county, ')')::VARCHAR AS destination_city,
-      (CASE 
+        (CASE 
               WHEN b."VIP" IS NOT NULL THEN 
                   CASE WHEN b."VIP" THEN 'VIP' ELSE 'Not VIP' END
               WHEN tr.rank IS NOT NULL THEN 'Train Rank: ' || tr.rank
               WHEN ai.flight_class IS NOT NULL THEN 'Flight Class: ' || ai.flight_class
               ELSE NULL
-          END)::VARCHAR AS extra_info
+        END)::VARCHAR AS extra_info
         FROM "ticket" t
         INNER JOIN "reservation" re ON re.ticket_id = t.id
         INNER JOIN "user" u ON u.id = re.user_id
